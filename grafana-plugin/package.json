@@ -1,0 +1,23 @@
+{
+  "name": "fangorn-sentinel-grafana-plugin",
+  "version": "1.0.0",
+  "description": "Fangorn Sentinel on-call notification plugin for Grafana",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "author": "Notifd",
+  "license": "MIT",
+  "devDependencies": {
+    "@grafana/data": "^9.0.0",
+    "@grafana/runtime": "^9.0.0",
+    "@grafana/toolkit": "^9.0.0",
+    "@grafana/ui": "^9.0.0"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

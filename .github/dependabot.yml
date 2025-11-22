@@ -1,0 +1,95 @@
+version: 2
+updates:
+  # Elixir dependencies (backend)
+  - package-ecosystem: "mix"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "notifd/maintainers"
+    labels:
+      - "dependencies"
+      - "elixir"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # npm dependencies (backend assets)
+  - package-ecosystem: "npm"
+    directory: "/backend/assets"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # iOS dependencies (CocoaPods)
+  - package-ecosystem: "cocoapods"
+    directory: "/mobile/ios"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ios"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Android dependencies (Gradle)
+  - package-ecosystem: "gradle"
+    directory: "/mobile/android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "android"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Grafana plugin dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/grafana-plugin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "grafana-plugin"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci)"

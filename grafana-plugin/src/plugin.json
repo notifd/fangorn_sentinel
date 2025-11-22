@@ -1,0 +1,38 @@
+{
+  "type": "app",
+  "name": "Fangorn Sentinel",
+  "id": "notifd-fangornsentinel-app",
+  "info": {
+    "description": "On-call notification system - PagerDuty/Grafana OnCall replacement",
+    "author": {
+      "name": "Notifd",
+      "url": "https://github.com/notifd/fangorn-sentinel"
+    },
+    "keywords": ["on-call", "alerts", "notifications", "pagerduty"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {"name": "GitHub", "url": "https://github.com/notifd/fangorn-sentinel"},
+      {"name": "Documentation", "url": "https://docs.fangorn-sentinel.com"}
+    ],
+    "screenshots": [],
+    "version": "1.0.0",
+    "updated": "2025-11-21"
+  },
+  "includes": [
+    {
+      "type": "page",
+      "name": "Fangorn Sentinel",
+      "path": "/a/notifd-fangornsentinel-app",
+      "role": "Viewer",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaDependency": ">=9.0.0",
+    "plugins": []
+  }
+}

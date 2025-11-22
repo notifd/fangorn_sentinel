@@ -1,0 +1,7 @@
+defmodule FangornSentinelWeb.PageController do
+  use FangornSentinelWeb, :controller
+
+  def home(conn, _params) do
+    render(conn, :home)
+  end
+end

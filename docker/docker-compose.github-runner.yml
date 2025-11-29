@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  github-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.github-runner
+    container_name: fangorn-github-runner
+    environment:
+      - RUNNER_URL=https://github.com/notifd
+      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=fangorn-sentinel-runner
+      - RUNNER_LABELS=self-hosted,Linux,X64,ubuntu,fangorn
+      - RUNNER_WORK_DIRECTORY=_work
+    volumes:
+      # Optional: mount Docker socket if you need Docker-in-Docker
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # Optional: persist runner data
+      - runner-data:/home/runner/_work
+    restart: unless-stopped
+    # Privileged mode if you need Docker-in-Docker
+    # privileged: true
+
+volumes:
+  runner-data:

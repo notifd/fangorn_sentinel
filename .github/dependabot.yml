@@ -4,8 +4,7 @@ updates:
   - package-ecosystem: "mix"
     directory: "/backend"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     reviewers:
       - "notifd/maintainers"
@@ -20,8 +19,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/backend/assets"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
@@ -29,12 +27,24 @@ updates:
     commit-message:
       prefix: "chore(deps)"
 
+  # iOS dependencies (Swift Package Manager)
+  - package-ecosystem: "swift"
+    directory: "/mobile/ios"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ios"
+      - "swift"
+    commit-message:
+      prefix: "chore(deps)"
+
   # iOS dependencies (CocoaPods)
   - package-ecosystem: "cocoapods"
     directory: "/mobile/ios"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 3
     labels:
       - "dependencies"
@@ -46,8 +56,7 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/mobile/android"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
@@ -59,8 +68,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/grafana-plugin"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
@@ -72,8 +80,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/docker"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 3
     labels:
       - "dependencies"
@@ -85,8 +92,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 3
     labels:
       - "dependencies"

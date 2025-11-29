@@ -4,8 +4,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Backend CI](https://github.com/notifd/fangorn_sentinel/workflows/Backend%20CI/badge.svg)](https://github.com/notifd/fangorn_sentinel/actions)
-[![iOS CI](https://github.com/notifd/fangorn_sentinel/workflows/iOS%20CI/badge.svg)](https://github.com/notifd/fangorn_sentinel/actions)
-[![Android CI](https://github.com/notifd/fangorn_sentinel/workflows/Android%20CI/badge.svg)](https://github.com/notifd/fangorn_sentinel/actions)
+[![Mobile CI](https://github.com/notifd/fangorn_sentinel/workflows/Mobile%20CI/badge.svg)](https://github.com/notifd/fangorn_sentinel/actions)
+[![Phase 1](https://img.shields.io/github/milestones/progress/notifd/fangorn_sentinel/1)](https://github.com/notifd/fangorn_sentinel/milestone/1)
+[![Issues](https://img.shields.io/github/issues/notifd/fangorn_sentinel)](https://github.com/notifd/fangorn_sentinel/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 Fangorn Sentinel is a comprehensive, open-source on-call notification system with native mobile apps, real-time web dashboard, and Grafana integration. Built as a modern replacement for Grafana OnCall.
 
@@ -720,13 +722,17 @@ We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guideline
 
 ## Roadmap
 
-### Phase 1: Core Platform (Current)
+### Phase 1: Core Platform (**~90% Complete**)
 - [x] Project structure
-- [ ] Alert reception and routing
-- [ ] Schedule management
+- [x] Alert reception (Grafana webhooks)
+- [x] Alert routing with Oban workers
+- [x] Push notifications (APNs/FCM)
+- [x] Database schema and migrations
+- [x] REST API foundation
+- [x] GraphQL API foundation
+- [ ] Schedule management (Next up!)
 - [ ] Escalation policies
 - [ ] Web dashboard (LiveView)
-- [ ] REST + GraphQL APIs
 
 ### Phase 2: Mobile Apps
 - [ ] iOS app (Swift/SwiftUI)
@@ -793,8 +799,10 @@ Built with ❤️ by the open-source community.
 
 ---
 
-**Status**: Early Development
-**Last Updated**: 2025-11-21
-**Maintainer**: Chaos
+**Status**: 🚧 Active Development - Phase 1 (90% Complete)
+**Last Updated**: 2025-11-22
+**Maintainer**: [@cole-christensen](https://github.com/cole-christensen)
+**Tests Passing**: 83/83 ✅
+**Next Milestone**: [Phase 2 - Scheduling & Escalation](https://github.com/notifd/fangorn_sentinel/milestone/2)
 
 *"Always watching, never sleeping"* 🌲👁️

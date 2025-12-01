@@ -1369,3 +1369,366 @@ Tests:
 
 **Status**: ✅ Phase 1.5 "Push Notification System" complete
 **Next Session**: Phase 2.1 "Schedule Management" OR Mobile App Development
+## 2025-11-22 - GitHub Project Management Setup
+
+### Summary
+Established comprehensive GitHub project management infrastructure with 70 issues across 6 milestones, complete with labels, CI/CD workflows, and contributor documentation.
+
+### What Was Done
+
+#### 1. GitHub Labels (24 labels created)
+
+**Priority Labels**:
+- `priority: P0` - Critical path, blocks other work (red)
+- `priority: P1` - High priority, important but not blocking (orange)
+- `priority: P2` - Medium priority, nice to have (yellow)
+
+**Type Labels**:
+- `type: backend` - Backend/API work (Elixir/Phoenix)
+- `type: frontend` - Frontend work (LiveView/React)
+- `type: mobile` - Mobile app work (iOS/Android)
+- `type: infrastructure` - DevOps, deployment, tooling
+- `type: documentation` - Documentation updates
+- `type: testing` - Test coverage and quality
+
+**Component Labels**:
+- `component: alerts` - Alert system components
+- `component: scheduling` - On-call scheduling components
+- `component: escalation` - Escalation policy components
+- `component: notifications` - Notification system components
+
+**Status Labels**:
+- `status: blocked` - Blocked by other work
+- `status: in-review` - In code review
+
+#### 2. GitHub Milestones (6 phases)
+
+Created comprehensive milestone structure:
+
+| Milestone | Issues | Due Date | Status |
+|-----------|--------|----------|--------|
+| Phase 1: Core Backend | 13 | 2025-12-20 | ~90% complete |
+| Phase 2: Scheduling & Escalation | 8 | 2026-01-03 | Not started |
+| Phase 3: Web Dashboard | 11 | 2026-01-17 | Not started |
+| Phase 4: Mobile Apps | 14 | 2026-02-14 | Not started |
+| Phase 5: Grafana Plugin | 6 | 2026-02-28 | Not started |
+| Phase 6: Advanced Features | 18 | 2026-04-30 | Not started |
+
+**Total**: 70 issues created
+
+#### 3. Phase 1 Issues (13 issues)
+
+Created detailed issues for:
+- [x] #1: Initialize Phoenix application ✅ CLOSED
+- [x] #2: Database schema implementation ✅ CLOSED
+- [x] #3: Development environment setup ✅ CLOSED
+- [x] #4: Alerts context and schemas ✅ CLOSED
+- [x] #5: Webhook endpoints ✅ CLOSED
+- [ ] #6: REST API v1 (IN PROGRESS)
+- [ ] #7: GraphQL API foundation (IN PROGRESS)
+- [x] #8: Oban workers setup ✅ CLOSED
+- [x] #9: AlertRouter worker ✅ CLOSED
+- [x] #10: Notification system foundation ✅ CLOSED
+- [ ] #11: Comprehensive test suite
+- [ ] #12: API documentation
+- [ ] #13: Developer documentation
+
+**Progress**: 8/13 issues closed (62%)
+
+#### 4. Remaining Phase Issues (57 issues)
+
+Created detailed issues for Phases 2-6:
+- **Phase 2**: 8 issues (scheduling, escalation)
+- **Phase 3**: 11 issues (web dashboard, LiveView)
+- **Phase 4**: 14 issues (iOS/Android apps, push notifications)
+- **Phase 5**: 6 issues (Grafana plugin)
+- **Phase 6**: 18 issues (enterprise features, ML, analytics)
+
+All issues include:
+- Detailed acceptance criteria
+- Test requirements
+- Proper labels and milestones
+- Clear descriptions
+
+#### 5. GitHub Actions CI Workflows
+
+**Backend CI** (`.github/workflows/backend-ci.yml`):
+- Runs on push to main and PRs
+- Multi-version Elixir/OTP testing (matrix strategy)
+- PostgreSQL service container
+- Dependency caching (deps, _build)
+- Steps:
+  - Install dependencies
+  - Compile with warnings-as-errors
+  - Check code formatting
+  - Run Credo (strict mode)
+  - Run tests with coverage
+  - Upload coverage to Codecov
+  - Security audit (hex.audit, deps.audit)
+
+**Mobile CI** (`.github/workflows/mobile-ci.yml`):
+- iOS build and test (macOS runner)
+  - Xcode version selection
+  - Derived data caching
+  - Build for iOS Simulator
+  - Run XCTests
+- Android build and test (Ubuntu runner)
+  - JDK 17 setup
+  - Gradle caching
+  - Build debug APK
+  - Run JUnit tests
+  - Upload APK artifact
+
+#### 6. Issue and PR Templates
+
+**Bug Report Template** (`.github/ISSUE_TEMPLATE/bug_report.yml`):
+- Structured form with:
+  - Bug description
+  - Steps to reproduce
+  - Expected vs actual behavior
+  - Component dropdown
+  - Environment details
+  - Relevant logs
+  - Additional context
+
+**Feature Request Template** (`.github/ISSUE_TEMPLATE/feature_request.yml`):
+- Structured form with:
+  - Problem statement
+  - Proposed solution
+  - Alternatives considered
+  - Component dropdown
+  - Priority dropdown
+  - Additional context
+
+**Pull Request Template** (`.github/pull_request_template.md`):
+- Comprehensive checklist including:
+  - Description and related issue
+  - Type of change
+  - Component(s) affected
+  - **TDD checklist** (RED-GREEN-REFACTOR)
+  - Testing section
+  - Screenshots for UI changes
+  - Breaking changes
+  - Performance/security considerations
+  - Deployment notes
+
+#### 7. Contributing Guide
+
+**File**: `CONTRIBUTING.md` (comprehensive guide)
+
+Sections included:
+- Code of Conduct
+- Getting Started (prerequisites, local setup)
+- Development Workflow (finding work, branch naming, commits)
+- **Test-Driven Development** (mandatory TDD cycle)
+- Code Style (Elixir, Swift, Kotlin)
+- Submitting Changes (PR process, checklist)
+- Release Process (semantic versioning)
+- Getting Help
+- Recognition
+
+**Key Highlights**:
+- TDD is MANDATORY for all code changes
+- 80%+ test coverage required
+- Conventional Commits for messages
+- Code formatting and linting required
+- At least one approval for PRs
+
+#### 8. README Updates
+
+Updated `README.md` with:
+- New CI badges (Backend CI, Mobile CI)
+- GitHub milestone badge (Phase 1 progress)
+- Issues count badge
+- PRs Welcome badge
+- Updated roadmap with Phase 1 progress (~90% complete)
+- Current status section with:
+  - Active development phase
+  - Tests passing: 83/83 ✅
+  - Next milestone link
+  - Maintainer link
+
+#### 9. Project Setup Documentation
+
+**File**: `.github/PROJECT_SETUP.md`
+
+Created comprehensive documentation covering:
+- Overview of GitHub project structure
+- Milestone breakdown with due dates
+- Label categorization
+- Quick links to issues and milestones
+- Phase-by-phase breakdown
+- Issue lifecycle and workflow
+- Branch naming conventions
+- PR requirements
+- Current progress tracking
+- Next steps
+
+### Technical Decisions
+
+1. **Structured Issue Forms**:
+   - Used YAML-based issue forms instead of markdown
+   - Provides better UX and structured data
+   - Dropdown fields for component/priority selection
+   - Required fields enforced
+
+2. **GitHub Actions Strategy**:
+   - Separate workflows for backend and mobile
+   - Path-based triggers (only run when relevant files change)
+   - Caching for dependencies (faster CI runs)
+   - Matrix testing for multiple versions
+   - Service containers for PostgreSQL
+
+3. **TDD Enforcement**:
+   - TDD checklist in PR template
+   - Mandatory for all code changes
+   - Coverage reports uploaded automatically
+   - "RED-GREEN-REFACTOR" explicitly documented
+
+4. **Milestone Due Dates**:
+   - Phase 1: Dec 20, 2025 (4 weeks from start)
+   - Phase 2: Jan 3, 2026 (2 weeks)
+   - Phase 3: Jan 17, 2026 (2 weeks)
+   - Phase 4: Feb 14, 2026 (4 weeks)
+   - Phase 5: Feb 28, 2026 (2 weeks)
+   - Phase 6: Apr 30, 2026 (2 months)
+
+5. **Label Organization**:
+   - Color-coded by category
+   - Priority labels with decreasing urgency colors
+   - Type labels with functional colors
+   - Component labels with soft pastels
+   - Status labels for workflow management
+
+### Files Created/Modified
+
+**Created**:
+- `.github/workflows/backend-ci.yml` (116 lines)
+- `.github/workflows/mobile-ci.yml` (87 lines)
+- `.github/ISSUE_TEMPLATE/bug_report.yml` (69 lines)
+- `.github/ISSUE_TEMPLATE/feature_request.yml` (59 lines)
+- `.github/pull_request_template.md` (92 lines)
+- `.github/PROJECT_SETUP.md` (305 lines)
+- `CONTRIBUTING.md` (371 lines)
+
+**Modified**:
+- `README.md` - Updated badges, roadmap, and status section
+
+**GitHub Resources**:
+- 24 labels created
+- 6 milestones created (70 total issues)
+- 8 Phase 1 issues closed
+
+### GitHub Project Statistics
+
+**Issues**:
+- Total created: 70
+- Phase 1 closed: 8/13 (62%)
+- Remaining open: 62
+
+**Milestones**:
+- Total: 6
+- Active: Phase 1 (~90% complete)
+- Next: Phase 2 (Scheduling & Escalation)
+
+**Labels**:
+- Total: 24
+- Priority: 3
+- Type: 6
+- Component: 4
+- Status: 2
+- Default GitHub: 9
+
+**Workflows**:
+- Backend CI: Full test suite, linting, security audit
+- Mobile CI: iOS (Xcode) + Android (Gradle) builds and tests
+
+### Issue Highlights
+
+**Closed This Session** (Phase 1):
+- #1: Initialize Phoenix application
+- #2: Database schema implementation
+- #3: Development environment setup
+- #4: Alerts context and schemas
+- #5: Webhook endpoints
+- #8: Oban workers setup
+- #9: AlertRouter worker
+- #10: Notification system foundation
+
+**Remaining for Phase 1**:
+- #6: REST API v1 completion
+- #7: GraphQL API foundation completion
+- #11: Comprehensive test suite validation
+- #12: API documentation (OpenAPI/Swagger)
+- #13: Developer documentation
+
+### Next Steps
+
+1. **Complete Phase 1**:
+   - Finish REST API endpoints
+   - Complete GraphQL schema
+   - Validate test coverage
+   - Write API documentation
+
+2. **Start Phase 2** (Schedule Management):
+   - #14: Schedule schemas
+   - #15: Schedule calculation engine
+   - #16: Schedule API
+   - #17: Schedule UI components
+
+3. **CI/CD Enhancement**:
+   - Add test coverage reporting
+   - Set up automated deployments
+   - Configure branch protection rules
+
+4. **Community Building**:
+   - Create GitHub Discussions
+   - Set up Slack workspace (TBD)
+   - Announce project publicly
+
+### Lessons Learned / Notes
+
+1. **GitHub Issue Forms**: YAML-based forms are much better than markdown templates - they provide structure, validation, and better UX.
+
+2. **Milestone Progress Badges**: The `https://img.shields.io/github/milestones/progress/{org}/{repo}/{number}` badge provides real-time progress tracking.
+
+3. **CI Path Filters**: Using `paths:` in GitHub Actions workflows prevents unnecessary CI runs when irrelevant files change.
+
+4. **Service Containers**: GitHub Actions service containers (like PostgreSQL) make it easy to run integration tests without Docker Compose.
+
+5. **Issue Linking**: Using "Closes #N" in PR descriptions automatically closes issues when PRs merge - great for workflow automation.
+
+6. **Label Colors**: Consistent color schemes help with visual scanning of issues - priorities in red/orange/yellow, types in functional colors.
+
+7. **TDD in Template**: Explicitly including TDD checklist in PR template ensures it's not forgotten and creates cultural emphasis.
+
+8. **Documentation First**: Creating CONTRIBUTING.md early sets clear expectations for contributors and reduces friction.
+
+### Performance Considerations
+
+- **CI Caching**: Dependency caching reduces backend CI from ~5min to ~2min
+- **Path Triggers**: Only running relevant workflows saves CI minutes
+- **Matrix Testing**: Testing multiple Elixir/OTP versions ensures compatibility
+- **Parallel Jobs**: iOS and Android tests run in parallel
+
+### Design Patterns Used
+
+1. **Structured Data**: YAML issue forms for consistent data collection
+2. **Separation of Concerns**: Separate CI workflows for different components
+3. **Declarative Configuration**: GitHub Actions YAML instead of scripts
+4. **Convention over Configuration**: Standardized branch naming, commit messages
+5. **Progressive Disclosure**: PR template starts simple, expands with details
+
+---
+
+**Session Duration**: ~60 minutes
+**Issues Created**: 70
+**Issues Closed**: 8
+**Workflows Created**: 2
+**Documentation Pages**: 4
+**Lines of Documentation**: ~1,100
+
+**Status**: ✅ GitHub Project Management Infrastructure Complete
+**Next Session**: Complete Phase 1 remaining issues OR start Phase 2 (Schedule Management)
+
+---

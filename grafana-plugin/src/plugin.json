@@ -3,36 +3,57 @@
   "name": "Fangorn Sentinel",
   "id": "notifd-fangornsentinel-app",
   "info": {
-    "description": "On-call notification system - PagerDuty/Grafana OnCall replacement",
+    "description": "On-call notification system - Open source PagerDuty/Grafana OnCall replacement",
     "author": {
       "name": "Notifd",
-      "url": "https://github.com/notifd/fangorn-sentinel"
+      "url": "https://github.com/notifd"
     },
-    "keywords": ["on-call", "alerts", "notifications", "pagerduty"],
+    "keywords": ["on-call", "alerts", "notifications", "pagerduty", "incident-management"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
     "links": [
-      {"name": "GitHub", "url": "https://github.com/notifd/fangorn-sentinel"},
-      {"name": "Documentation", "url": "https://docs.fangorn-sentinel.com"}
+      {"name": "GitHub", "url": "https://github.com/notifd/fangorn_sentinel"},
+      {"name": "Documentation", "url": "https://github.com/notifd/fangorn_sentinel#readme"}
     ],
     "screenshots": [],
     "version": "1.0.0",
-    "updated": "2025-11-21"
+    "updated": "2025-12-01"
   },
   "includes": [
     {
       "type": "page",
-      "name": "Fangorn Sentinel",
-      "path": "/a/notifd-fangornsentinel-app",
+      "name": "Alerts",
+      "path": "/a/notifd-fangornsentinel-app/alerts",
       "role": "Viewer",
       "addToNav": true,
       "defaultNav": true
+    },
+    {
+      "type": "page",
+      "name": "Schedules",
+      "path": "/a/notifd-fangornsentinel-app/schedules",
+      "role": "Viewer",
+      "addToNav": true
+    },
+    {
+      "type": "page",
+      "name": "Escalation Policies",
+      "path": "/a/notifd-fangornsentinel-app/escalation",
+      "role": "Editor",
+      "addToNav": true
+    },
+    {
+      "type": "page",
+      "name": "Configuration",
+      "path": "/a/notifd-fangornsentinel-app/config",
+      "role": "Admin",
+      "addToNav": true
     }
   ],
   "dependencies": {
-    "grafanaDependency": ">=9.0.0",
+    "grafanaDependency": ">=10.0.0",
     "plugins": []
   }
 }

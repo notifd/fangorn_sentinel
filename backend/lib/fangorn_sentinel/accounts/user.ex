@@ -11,6 +11,7 @@ defmodule FangornSentinel.Accounts.User do
     field :phone, :string
     field :timezone, :string, default: "UTC"
     field :encrypted_password, :string
+    field :password, :string, virtual: true
     field :role, :string, default: "user"
     field :confirmed_at, :utc_datetime
 
@@ -20,8 +21,54 @@ defmodule FangornSentinel.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name, :phone, :timezone, :encrypted_password, :role, :confirmed_at])
-    |> validate_required([:email, :encrypted_password])
+    |> cast(attrs, [:email, :name, :phone, :timezone, :role, :confirmed_at])
+    |> validate_required([:email])
+    |> validate_email()
     |> unique_constraint(:email)
+  end
+
+  @doc "Changeset for user registration with password"
+  def registration_changeset(user, attrs) do
+    user
+    |> changeset(attrs)
+    |> cast(attrs, [:password])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 8, max: 72)
+    |> hash_password()
+  end
+
+  defp validate_email(changeset) do
+    changeset
+    |> validate_required([:email])
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
+    |> validate_length(:email, max: 160)
+  end
+
+  defp hash_password(changeset) do
+    password = get_change(changeset, :password)
+
+    if password && changeset.valid? do
+      changeset
+      |> put_change(:encrypted_password, Bcrypt.hash_pwd_salt(password))
+      |> delete_change(:password)
+    else
+      changeset
+    end
+  end
+
+  @doc """
+  Verifies the password.
+
+  If there is no user or the user doesn't have a password, we call
+  `Bcrypt.no_user_verify/0` to avoid timing attacks.
+  """
+  def valid_password?(%__MODULE__{encrypted_password: encrypted_password}, password)
+      when is_binary(encrypted_password) and byte_size(password) > 0 do
+    Bcrypt.verify_pass(password, encrypted_password)
+  end
+
+  def valid_password?(_, _) do
+    Bcrypt.no_user_verify()
+    false
   end
 end

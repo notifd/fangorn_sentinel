@@ -60,6 +60,11 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Guardian JWT configuration
+config :fangorn_sentinel, FangornSentinel.Guardian,
+  issuer: "fangorn_sentinel",
+  secret_key: "dev_secret_key_change_in_production"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

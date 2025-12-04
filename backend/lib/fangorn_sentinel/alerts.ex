@@ -117,59 +117,45 @@ defmodule FangornSentinel.Alerts do
   @doc """
   Acknowledges an alert.
 
-  ## Options
-
-    * `:user_id` - Required. ID of the user acknowledging the alert
-
   ## Examples
 
-      iex> acknowledge_alert(alert_id, user_id: 1)
+      iex> acknowledge_alert(alert, user, "Looking into it")
       {:ok, %Alert{}}
-
-      iex> acknowledge_alert(999, user_id: 1)
-      {:error, :not_found}
   """
-  def acknowledge_alert(alert_id, opts) do
-    case get_alert(alert_id) do
-      {:ok, alert} ->
-        attrs = %{acknowledged_by_id: Keyword.get(opts, :user_id)}
+  def acknowledge_alert(%Alert{} = alert, user, note \\ nil) do
+    attrs = %{
+      acknowledged_by_id: user.id,
+      acknowledged_at: DateTime.utc_now(),
+      status: :acknowledged
+    }
 
-        alert
-        |> Alert.acknowledge_changeset(attrs)
-        |> Repo.update()
+    attrs = if note, do: Map.put(attrs, :acknowledgement_note, note), else: attrs
 
-      {:error, :not_found} ->
-        {:error, :not_found}
-    end
+    alert
+    |> Alert.acknowledge_changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """
   Resolves an alert.
 
-  ## Options
-
-    * `:user_id` - Required. ID of the user resolving the alert
-
   ## Examples
 
-      iex> resolve_alert(alert_id, user_id: 1)
+      iex> resolve_alert(alert, user, "Fixed the issue")
       {:ok, %Alert{}}
-
-      iex> resolve_alert(999, user_id: 1)
-      {:error, :not_found}
   """
-  def resolve_alert(alert_id, opts) do
-    case get_alert(alert_id) do
-      {:ok, alert} ->
-        attrs = %{resolved_by_id: Keyword.get(opts, :user_id)}
+  def resolve_alert(%Alert{} = alert, user, resolution_note \\ nil) do
+    attrs = %{
+      resolved_by_id: user.id,
+      resolved_at: DateTime.utc_now(),
+      status: :resolved
+    }
 
-        alert
-        |> Alert.resolve_changeset(attrs)
-        |> Repo.update()
+    attrs = if resolution_note, do: Map.put(attrs, :resolution_note, resolution_note), else: attrs
 
-      {:error, :not_found} ->
-        {:error, :not_found}
-    end
+    alert
+    |> Alert.resolve_changeset(attrs)
+    |> Repo.update()
   end
 
   # Private helper functions

@@ -14,13 +14,32 @@ defmodule FangornSentinelWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :graphql do
+    plug :accepts, ["json"]
+    plug FangornSentinelWeb.Context
+  end
+
   scope "/", FangornSentinelWeb do
     pipe_through :browser
 
     get "/", PageController, :home
   end
 
-  # API routes
+  # GraphQL API (for mobile apps)
+  scope "/api" do
+    pipe_through :graphql
+
+    forward "/graphql", Absinthe.Plug,
+      schema: FangornSentinelWeb.GraphQL.Schema
+
+    if Application.compile_env(:fangorn_sentinel, :dev_routes) do
+      forward "/graphiql", Absinthe.Plug.GraphiQL,
+        schema: FangornSentinelWeb.GraphQL.Schema,
+        interface: :playground
+    end
+  end
+
+  # REST API routes
   scope "/api/v1", FangornSentinelWeb.API.V1 do
     pipe_through :api
 

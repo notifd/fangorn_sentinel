@@ -1732,3 +1732,312 @@ Created comprehensive documentation covering:
 **Next Session**: Complete Phase 1 remaining issues OR start Phase 2 (Schedule Management)
 
 ---
+
+## 2025-12-01 - Multi-Platform Foundation (Backend, Android, Grafana Plugin)
+
+### Summary
+Added core foundations across multiple platforms: schedules and escalation modules for the backend, complete Android app skeleton with Jetpack Compose, and enhanced Grafana plugin with proper TypeScript structure.
+
+### What Was Done
+
+#### 1. Backend - Schedules Module
+
+**Files Created**:
+- `lib/fangorn_sentinel/schedules/schedule.ex` - Schedule schema
+- `lib/fangorn_sentinel/schedules/rotation.ex` - Rotation schema with on-call calculation
+- `lib/fangorn_sentinel/schedules.ex` - Schedules context
+
+**Schedule Schema**:
+```elixir
+schema "schedules" do
+  field :name, :string
+  field :description, :string
+  field :timezone, :string, default: "UTC"
+  belongs_to :team, FangornSentinel.Accounts.Team
+  has_many :rotations, FangornSentinel.Schedules.Rotation
+end
+```
+
+**Rotation Types**:
+- `:daily` - Rotates every day
+- `:weekly` - Rotates every week
+- `:custom` - Uses `duration_hours` for custom rotation
+
+**Key Function** - `Rotation.current_on_call/2`:
+```elixir
+def current_on_call(rotation, datetime) do
+  days_since_start = Date.diff(DateTime.to_date(datetime), rotation.rotation_start_date)
+  # Calculate participant based on rotation type...
+end
+```
+
+#### 2. Backend - Escalation Module
+
+**Files Created**:
+- `lib/fangorn_sentinel/escalation/policy.ex` - Escalation policy schema
+- `lib/fangorn_sentinel/escalation/step.ex` - Escalation step schema
+- `lib/fangorn_sentinel/escalation.ex` - Escalation context
+
+**Escalation Step Channels**:
+- `:push` - Mobile push notification
+- `:sms` - Text message
+- `:phone` - Voice call
+- `:email` - Email notification
+- `:slack` - Slack message
+
+**Key Function** - `Escalation.get_policy_for_alert/1`:
+```elixir
+def get_policy_for_alert(alert) do
+  # Returns escalation policy for alert's team
+  # Falls back to default policy if no team
+end
+```
+
+#### 3. Backend - Database Migrations
+
+**Files Created**:
+- `priv/repo/migrations/20251201201906_create_schedules.exs`
+- `priv/repo/migrations/20251201201907_create_escalation_policies.exs`
+
+**Tables Created**:
+- `schedules` - On-call schedules
+- `rotations` - Schedule rotations
+- `escalation_policies` - Escalation policies
+- `escalation_steps` - Individual escalation steps
+
+#### 4. Android App - Complete Skeleton
+
+**Build Configuration**:
+- `settings.gradle.kts` - Project settings
+- `build.gradle.kts` - Root build file
+- `app/build.gradle.kts` - App module with dependencies
+- `gradle.properties` - Gradle configuration
+
+**Dependencies Added**:
+- Jetpack Compose (Material 3)
+- Navigation Compose
+- Hilt for DI
+- Firebase Cloud Messaging
+- Retrofit + OkHttp
+- Apollo GraphQL
+- AndroidX Security
+
+**Source Files**:
+- `AndroidManifest.xml` - App manifest with FCM service
+- `models/Alert.kt` - Alert data model with enums
+- `features/alerts/AlertViewModel.kt` - ViewModel with mock data
+- `ui/theme/Theme.kt` - Material 3 theme
+
+**Resource Files**:
+- `res/values/strings.xml`
+- `res/values/themes.xml`
+- `res/xml/backup_rules.xml`
+- `res/xml/data_extraction_rules.xml`
+
+#### 5. Grafana Plugin - Enhanced Structure
+
+**Files Updated/Created**:
+- `package.json` - Updated to Grafana 10, added build tooling
+- `tsconfig.json` - TypeScript configuration
+- `.gitignore` - Standard ignores
+- `src/plugin.json` - Multi-page app config (Alerts, Schedules, Escalation, Config)
+- `src/types.ts` - Complete TypeScript types for all entities
+- `src/module.ts` - Clean plugin module
+- `src/components/ConfigEditor.tsx` - Configuration page
+- `src/components/AlertsPage.tsx` - Alerts list with mock data
+
+**Plugin Pages**:
+- `/alerts` - Alert list view (default)
+- `/schedules` - Schedule management
+- `/escalation` - Escalation policy management
+- `/config` - Plugin configuration (admin only)
+
+### Technical Decisions
+
+1. **Rotation Calculation**: Uses `Date.diff/2` for accurate day counting across timezones
+2. **Escalation Channels as Enum Array**: Allows multiple notification channels per step
+3. **Android Min SDK 26**: Targets Android 8.0+ for modern APIs and good coverage
+4. **Grafana 10+**: Uses latest Grafana APIs for better compatibility
+5. **Material 3**: Android uses latest Material Design for modern look
+
+### Files Summary
+
+**Backend (Elixir)**:
+- 4 new modules (Schedule, Rotation, Policy, Step)
+- 2 new contexts (Schedules, Escalation)
+- 2 migrations
+- ~350 lines of code
+
+**Android (Kotlin)**:
+- 4 Gradle/build files
+- 5 source files
+- 4 resource files
+- ~400 lines of code
+
+**Grafana Plugin (TypeScript)**:
+- 5 config/meta files
+- 4 source files
+- ~450 lines of code
+
+### Next Steps
+
+1. **Backend**: Add tests for schedules and escalation modules
+2. **Android**: Add navigation, API integration, UI tests
+3. **Grafana Plugin**: Wire up to real API, add remaining pages
+
+---
+
+**Session Duration**: ~30 minutes
+**Lines of Code**: ~1,200 across all platforms
+**Components Added**: Backend schedules/escalation, Android skeleton, Grafana plugin
+
+**Status**: ✅ Multi-platform foundations complete
+**Next Session**: Tests, API integration, or iOS parity
+
+---
+
+## 2025-12-01 - Build System Verification and Fixes
+
+### Summary
+Verified build systems across all platforms. Fixed TypeScript errors in Grafana plugin, created webpack configuration, and added Gradle wrapper for Android. Identified missing SDK/toolchain requirements for local testing.
+
+### What Was Done
+
+#### 1. Grafana Plugin - Build System Complete
+
+**TypeScript Fixes** (`src/components/RootPage.tsx`):
+- Changed `fired_at` to `firedAt` to match TypeScript types
+- Fixed `alert.id` type from `number` to `string`
+- Removed unused imports (`getBackendSrv`, `Select`)
+- Replaced `Table` component with Card-based layout for `OnCallView`
+
+**Webpack Configuration Created** (`.config/webpack/webpack.config.ts`):
+```typescript
+- Production/development mode support
+- SWC loader for TypeScript/TSX compilation
+- CSS/SASS support
+- Asset handling (images, fonts)
+- CopyWebpackPlugin for plugin.json
+- ForkTsCheckerWebpackPlugin for type checking
+```
+
+**Dependencies Added**:
+- `webpack-merge` for configuration composition
+
+**Build Output**:
+```
+dist/
+├── module.js (6.72 KiB, minified)
+├── module.js.LICENSE.txt
+├── module.js.map (20.6 KiB)
+└── plugin.json
+```
+
+**Status**: ✅ `npm run typecheck` passes, `npm run build` succeeds
+
+#### 2. Android App - Gradle Wrapper Added
+
+**Files Created**:
+- `gradlew` - Gradle wrapper script (auto-downloads Gradle 8.4)
+- `gradle/wrapper/gradle-wrapper.properties` - Gradle 8.4 configuration
+- `gradle/wrapper/gradle-wrapper.jar` - Wrapper bootstrap
+
+**Gradle Version**: 8.4 (supports Java 21, Kotlin 1.9.10)
+
+**Test Result**:
+```bash
+$ ./gradlew --version
+Gradle 8.4 ✓
+Kotlin 1.9.10 ✓
+JVM 21.0.6 (JetBrains JBR) ✓
+```
+
+**Build Blocked By**: Missing Android SDK
+- Error: "SDK location not found. Define a valid SDK location with ANDROID_HOME..."
+- Recommendation: Install SDK via Android Studio preferences or `sdkmanager`
+
+**Status**: ⚠️ Gradle works, needs Android SDK for full build
+
+#### 3. Backend (Elixir) - Toolchain Required
+
+**Status**: ⚠️ Elixir/Mix not installed locally
+- Recommendation: `brew install elixir` or use Docker
+
+### Environment Assessment
+
+| Platform | Build Tool | Status | Blocking Issue |
+|----------|-----------|--------|----------------|
+| Grafana Plugin | npm/webpack | ✅ Builds | None |
+| Android | Gradle 8.4 | ⚠️ Partial | No Android SDK |
+| Backend | Mix | ⚠️ Blocked | No Elixir installed |
+
+### Technical Decisions
+
+1. **Webpack Config Location**: Used `.config/webpack/` directory following Grafana plugin conventions
+
+2. **Gradle Version Selection**: Gradle 8.4 chosen for:
+   - Java 21 support (matches Android Studio JBR)
+   - Kotlin 1.9.10 support
+   - AGP 8.x compatibility
+
+3. **Wrapper Jar Download**: Downloaded from GitHub releases instead of requiring local Gradle installation
+
+4. **Type Fixes**: Fixed TypeScript types to be consistent:
+   - `id: string` (not `number`) - matches typical API responses
+   - `firedAt: string` (ISO timestamp) - consistent camelCase naming
+
+### Files Created/Modified
+
+**Created**:
+- `grafana-plugin/.config/webpack/webpack.config.ts` (127 lines)
+- `mobile/android/gradlew` (shell script)
+- `mobile/android/gradle/wrapper/gradle-wrapper.properties`
+- `mobile/android/gradle/wrapper/gradle-wrapper.jar` (binary)
+
+**Modified**:
+- `grafana-plugin/src/components/RootPage.tsx` - TypeScript fixes
+- `grafana-plugin/package.json` - Added webpack-merge dependency
+
+### Build Commands Reference
+
+**Grafana Plugin**:
+```bash
+cd grafana-plugin
+npm install
+npm run typecheck  # TypeScript checking
+npm run build      # Production build
+```
+
+**Android (requires SDK)**:
+```bash
+cd mobile/android
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+./gradlew assembleDebug
+```
+
+**Backend (requires Elixir)**:
+```bash
+cd backend
+mix deps.get
+mix compile
+mix test
+```
+
+### Lessons Learned
+
+1. **Webpack Config Discovery**: Grafana plugin expects webpack config in `.config/webpack/` - not documented prominently
+
+2. **Type Consistency**: Frontend types (`firedAt`) should match backend API responses - established camelCase convention
+
+3. **SDK Dependencies**: Mobile builds require full SDK installation, not just the IDE
+
+4. **Gradle Wrapper Value**: Creating wrapper files enables builds without system-wide Gradle installation
+
+---
+
+**Session Duration**: ~25 minutes
+**Fixes Applied**: TypeScript errors, webpack config, Gradle wrapper
+**Build Status**: Grafana ✅, Android ⚠️ (SDK needed), Backend ⚠️ (Elixir needed)
+
+**Status**: ✅ Grafana plugin builds successfully
+**Next Session**: Install missing SDKs or proceed with feature development

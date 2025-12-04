@@ -9,6 +9,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.notifd.fangornsentinel.models.Alert
+import com.notifd.fangornsentinel.models.AlertSeverity
+import com.notifd.fangornsentinel.models.AlertStatus
 import com.notifd.fangornsentinel.ui.AlertListScreen
 import com.notifd.fangornsentinel.ui.theme.FangornSentinelTheme
 import java.time.Instant
@@ -30,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    FangornSentinelApp()
+                    MainScreen()
                 }
             }
         }
@@ -38,25 +40,25 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun FangornSentinelApp() {
+fun MainScreen() {
     // TODO: Replace with actual ViewModel
     var alerts by remember {
         mutableStateOf(
             listOf(
                 Alert(
-                    id = 1,
+                    id = "1",
                     title = "High CPU Usage",
                     message = "CPU usage is above 90%",
-                    severity = Alert.Severity.CRITICAL,
-                    status = Alert.Status.FIRING,
+                    severity = AlertSeverity.CRITICAL,
+                    status = AlertStatus.FIRING,
                     firedAt = Instant.now().minusSeconds(300)
                 ),
                 Alert(
-                    id = 2,
+                    id = "2",
                     title = "Memory Warning",
                     message = "Memory usage at 85%",
-                    severity = Alert.Severity.WARNING,
-                    status = Alert.Status.FIRING,
+                    severity = AlertSeverity.WARNING,
+                    status = AlertStatus.FIRING,
                     firedAt = Instant.now().minusSeconds(600)
                 )
             )

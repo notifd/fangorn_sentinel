@@ -1,34 +1,40 @@
 package com.notifd.fangornsentinel.models
 
+import androidx.compose.ui.graphics.Color
 import java.time.Instant
 
-data class Alert(
-    val id: Int,
-    val title: String,
-    val message: String?,
-    val severity: Severity,
-    val status: Status,
-    val firedAt: Instant,
-    val acknowledgedAt: Instant? = null,
-    val source: String? = null
-) {
-    enum class Severity {
-        CRITICAL,
-        WARNING,
-        INFO;
+enum class AlertSeverity {
+    CRITICAL,
+    WARNING,
+    INFO;
 
-        fun toColor(): androidx.compose.ui.graphics.Color {
-            return when (this) {
-                CRITICAL -> androidx.compose.ui.graphics.Color.Red
-                WARNING -> androidx.compose.ui.graphics.Color(0xFFFF9800) // Orange
-                INFO -> androidx.compose.ui.graphics.Color.Blue
-            }
+    fun toColor(): Color {
+        return when (this) {
+            CRITICAL -> Color.Red
+            WARNING -> Color(0xFFFF9800) // Orange
+            INFO -> Color.Blue
         }
     }
-
-    enum class Status {
-        FIRING,
-        ACKNOWLEDGED,
-        RESOLVED
-    }
 }
+
+enum class AlertStatus {
+    FIRING,
+    ACKNOWLEDGED,
+    RESOLVED
+}
+
+data class Alert(
+    val id: String,
+    val title: String,
+    val message: String? = null,
+    val severity: AlertSeverity,
+    val status: AlertStatus,
+    val source: String? = null,
+    val sourceId: String? = null,
+    val labels: Map<String, String> = emptyMap(),
+    val annotations: Map<String, String> = emptyMap(),
+    val firedAt: Instant,
+    val acknowledgedAt: Instant? = null,
+    val resolvedAt: Instant? = null,
+    val assignedToId: String? = null
+)

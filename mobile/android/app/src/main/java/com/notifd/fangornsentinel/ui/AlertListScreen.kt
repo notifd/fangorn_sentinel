@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -15,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.notifd.fangornsentinel.models.Alert
+import com.notifd.fangornsentinel.models.AlertStatus
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -110,7 +113,7 @@ fun AlertRow(
             }
 
             // Status icon
-            if (alert.status == Alert.Status.FIRING) {
+            if (alert.status == AlertStatus.FIRING) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = "Firing",
@@ -121,6 +124,7 @@ fun AlertRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertDetailScreen(
     alert: Alert,
@@ -134,7 +138,7 @@ fun AlertDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -195,7 +199,7 @@ fun AlertDetailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Actions
-            if (alert.status == Alert.Status.FIRING) {
+            if (alert.status == AlertStatus.FIRING) {
                 Button(
                     onClick = onAcknowledge,
                     modifier = Modifier.fillMaxWidth()

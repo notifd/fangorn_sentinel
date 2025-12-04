@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Sentinel "eye" icon - simple bell/alert shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28
+                         C40,28 28,40 28,54
+                         L28,60
+                         C28,66 32,72 40,75
+                         L40,78
+                         C40,80.2 41.8,82 44,82
+                         L64,82
+                         C66.2,82 68,80.2 68,78
+                         L68,75
+                         C76,72 80,66 80,60
+                         L80,54
+                         C80,40 68,28 54,28Z
+                         M54,36
+                         C63.4,36 72,44.6 72,54
+                         L72,60
+                         C72,64 69,68 64,70
+                         L44,70
+                         C39,68 36,64 36,60
+                         L36,54
+                         C36,44.6 44.6,36 54,36Z" />
+    <!-- Inner dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,46
+                         C49.6,46 46,49.6 46,54
+                         C46,58.4 49.6,62 54,62
+                         C58.4,62 62,58.4 62,54
+                         C62,49.6 58.4,46 54,46Z" />
+</vector>

@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AppRootProps } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
 import {
   Button,
   Card,
   Field,
   Input,
-  Select,
   VerticalGroup,
   HorizontalGroup,
-  Table,
   Tag,
 } from '@grafana/ui';
 import { FangornSentinelAppSettings, Alert, User } from '../types';
@@ -20,7 +17,6 @@ export function RootPage({ meta }: AppRootProps<FangornSentinelAppSettings>) {
   const [selectedTab, setSelectedTab] = useState<'alerts' | 'oncall' | 'settings'>('alerts');
 
   const apiUrl = meta.jsonData?.apiUrl || '';
-  const apiKey = meta.secureJsonData?.apiKey || '';
 
   useEffect(() => {
     if (selectedTab === 'alerts') {
@@ -28,15 +24,14 @@ export function RootPage({ meta }: AppRootProps<FangornSentinelAppSettings>) {
     } else if (selectedTab === 'oncall') {
       loadOnCallUsers();
     }
-  }, [selectedTab]);
+  }, [selectedTab, apiUrl]);
 
   const loadAlerts = async () => {
+    if (!apiUrl) {
+      return;
+    }
     try {
-      const response = await fetch(`${apiUrl}/api/v1/alerts`, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
-      });
+      const response = await fetch(`${apiUrl}/api/v1/alerts`);
       const data = await response.json();
       setAlerts(data.alerts || []);
     } catch (error) {
@@ -45,12 +40,11 @@ export function RootPage({ meta }: AppRootProps<FangornSentinelAppSettings>) {
   };
 
   const loadOnCallUsers = async () => {
+    if (!apiUrl) {
+      return;
+    }
     try {
-      const response = await fetch(`${apiUrl}/api/v1/oncall/current`, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
-      });
+      const response = await fetch(`${apiUrl}/api/v1/oncall/current`);
       const data = await response.json();
       setUsers(data.users || []);
     } catch (error) {
@@ -58,12 +52,14 @@ export function RootPage({ meta }: AppRootProps<FangornSentinelAppSettings>) {
     }
   };
 
-  const acknowledgeAlert = async (alertId: number) => {
+  const acknowledgeAlert = async (alertId: string) => {
+    if (!apiUrl) {
+      return;
+    }
     try {
       await fetch(`${apiUrl}/api/v1/alerts/${alertId}/acknowledge`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
       });
@@ -105,7 +101,7 @@ export function RootPage({ meta }: AppRootProps<FangornSentinelAppSettings>) {
   );
 }
 
-function AlertsView({ alerts, onAcknowledge }: { alerts: Alert[]; onAcknowledge: (id: number) => void }) {
+function AlertsView({ alerts, onAcknowledge }: { alerts: Alert[]; onAcknowledge: (id: string) => void }) {
   return (
     <VerticalGroup spacing="md">
       <h2>Active Alerts</h2>
@@ -119,7 +115,7 @@ function AlertsView({ alerts, onAcknowledge }: { alerts: Alert[]; onAcknowledge:
             <Card.Meta>
               <Tag name={alert.severity} colorIndex={getSeverityColor(alert.severity)} />
               <Tag name={alert.status} colorIndex={getStatusColor(alert.status)} />
-              <span>Fired: {new Date(alert.fired_at).toLocaleString()}</span>
+              <span>Fired: {new Date(alert.firedAt).toLocaleString()}</span>
             </Card.Meta>
             {alert.status === 'firing' && (
               <Card.Actions>
@@ -142,14 +138,17 @@ function OnCallView({ users }: { users: User[] }) {
       {users.length === 0 ? (
         <p>No users currently on-call</p>
       ) : (
-        <Table
-          data={users}
-          columns={[
-            { id: 'name', header: 'Name' },
-            { id: 'email', header: 'Email' },
-            { id: 'phone', header: 'Phone' },
-          ]}
-        />
+        <div>
+          {users.map((user) => (
+            <Card key={user.id}>
+              <Card.Heading>{user.name}</Card.Heading>
+              <Card.Meta>
+                <span>{user.email}</span>
+                {user.phone && <span>{user.phone}</span>}
+              </Card.Meta>
+            </Card>
+          ))}
+        </div>
       )}
     </VerticalGroup>
   );

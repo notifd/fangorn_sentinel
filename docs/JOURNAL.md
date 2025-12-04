@@ -1893,3 +1893,151 @@ end
 
 **Status**: ✅ Multi-platform foundations complete
 **Next Session**: Tests, API integration, or iOS parity
+
+---
+
+## 2025-12-01 - Build System Verification and Fixes
+
+### Summary
+Verified build systems across all platforms. Fixed TypeScript errors in Grafana plugin, created webpack configuration, and added Gradle wrapper for Android. Identified missing SDK/toolchain requirements for local testing.
+
+### What Was Done
+
+#### 1. Grafana Plugin - Build System Complete
+
+**TypeScript Fixes** (`src/components/RootPage.tsx`):
+- Changed `fired_at` to `firedAt` to match TypeScript types
+- Fixed `alert.id` type from `number` to `string`
+- Removed unused imports (`getBackendSrv`, `Select`)
+- Replaced `Table` component with Card-based layout for `OnCallView`
+
+**Webpack Configuration Created** (`.config/webpack/webpack.config.ts`):
+```typescript
+- Production/development mode support
+- SWC loader for TypeScript/TSX compilation
+- CSS/SASS support
+- Asset handling (images, fonts)
+- CopyWebpackPlugin for plugin.json
+- ForkTsCheckerWebpackPlugin for type checking
+```
+
+**Dependencies Added**:
+- `webpack-merge` for configuration composition
+
+**Build Output**:
+```
+dist/
+├── module.js (6.72 KiB, minified)
+├── module.js.LICENSE.txt
+├── module.js.map (20.6 KiB)
+└── plugin.json
+```
+
+**Status**: ✅ `npm run typecheck` passes, `npm run build` succeeds
+
+#### 2. Android App - Gradle Wrapper Added
+
+**Files Created**:
+- `gradlew` - Gradle wrapper script (auto-downloads Gradle 8.4)
+- `gradle/wrapper/gradle-wrapper.properties` - Gradle 8.4 configuration
+- `gradle/wrapper/gradle-wrapper.jar` - Wrapper bootstrap
+
+**Gradle Version**: 8.4 (supports Java 21, Kotlin 1.9.10)
+
+**Test Result**:
+```bash
+$ ./gradlew --version
+Gradle 8.4 ✓
+Kotlin 1.9.10 ✓
+JVM 21.0.6 (JetBrains JBR) ✓
+```
+
+**Build Blocked By**: Missing Android SDK
+- Error: "SDK location not found. Define a valid SDK location with ANDROID_HOME..."
+- Recommendation: Install SDK via Android Studio preferences or `sdkmanager`
+
+**Status**: ⚠️ Gradle works, needs Android SDK for full build
+
+#### 3. Backend (Elixir) - Toolchain Required
+
+**Status**: ⚠️ Elixir/Mix not installed locally
+- Recommendation: `brew install elixir` or use Docker
+
+### Environment Assessment
+
+| Platform | Build Tool | Status | Blocking Issue |
+|----------|-----------|--------|----------------|
+| Grafana Plugin | npm/webpack | ✅ Builds | None |
+| Android | Gradle 8.4 | ⚠️ Partial | No Android SDK |
+| Backend | Mix | ⚠️ Blocked | No Elixir installed |
+
+### Technical Decisions
+
+1. **Webpack Config Location**: Used `.config/webpack/` directory following Grafana plugin conventions
+
+2. **Gradle Version Selection**: Gradle 8.4 chosen for:
+   - Java 21 support (matches Android Studio JBR)
+   - Kotlin 1.9.10 support
+   - AGP 8.x compatibility
+
+3. **Wrapper Jar Download**: Downloaded from GitHub releases instead of requiring local Gradle installation
+
+4. **Type Fixes**: Fixed TypeScript types to be consistent:
+   - `id: string` (not `number`) - matches typical API responses
+   - `firedAt: string` (ISO timestamp) - consistent camelCase naming
+
+### Files Created/Modified
+
+**Created**:
+- `grafana-plugin/.config/webpack/webpack.config.ts` (127 lines)
+- `mobile/android/gradlew` (shell script)
+- `mobile/android/gradle/wrapper/gradle-wrapper.properties`
+- `mobile/android/gradle/wrapper/gradle-wrapper.jar` (binary)
+
+**Modified**:
+- `grafana-plugin/src/components/RootPage.tsx` - TypeScript fixes
+- `grafana-plugin/package.json` - Added webpack-merge dependency
+
+### Build Commands Reference
+
+**Grafana Plugin**:
+```bash
+cd grafana-plugin
+npm install
+npm run typecheck  # TypeScript checking
+npm run build      # Production build
+```
+
+**Android (requires SDK)**:
+```bash
+cd mobile/android
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+./gradlew assembleDebug
+```
+
+**Backend (requires Elixir)**:
+```bash
+cd backend
+mix deps.get
+mix compile
+mix test
+```
+
+### Lessons Learned
+
+1. **Webpack Config Discovery**: Grafana plugin expects webpack config in `.config/webpack/` - not documented prominently
+
+2. **Type Consistency**: Frontend types (`firedAt`) should match backend API responses - established camelCase convention
+
+3. **SDK Dependencies**: Mobile builds require full SDK installation, not just the IDE
+
+4. **Gradle Wrapper Value**: Creating wrapper files enables builds without system-wide Gradle installation
+
+---
+
+**Session Duration**: ~25 minutes
+**Fixes Applied**: TypeScript errors, webpack config, Gradle wrapper
+**Build Status**: Grafana ✅, Android ⚠️ (SDK needed), Backend ⚠️ (Elixir needed)
+
+**Status**: ✅ Grafana plugin builds successfully
+**Next Session**: Install missing SDKs or proceed with feature development

@@ -2516,3 +2516,299 @@ Tests Passing: 83/83 (existing tests still pass)
 
 **Status**: ✅ GraphQL API and JWT Authentication complete
 **Next Session**: Add GraphQL tests, mobile integration, or continue with Phase 2
+
+---
+
+## 2025-12-04 - Validation Testing: 8 Critical Bugs Found and Fixed (Phase 1.8)
+
+### Summary
+Applied huorn testing methodology (`../huoron/docs/TESTING.md`) to find real bugs through validation testing. Wrote 16 tests focusing on **rejecting invalid input** rather than "happy path" testing. Found and fixed 8 critical bugs (50% hit rate).
+
+### Methodology Applied
+
+**Huorn Testing Principles**:
+1. Write tests with REAL data, not synthetic data
+2. Test that INVALID input is REJECTED (validation testing)
+3. Run the tests to see which ones find bugs
+4. Keep ONLY tests that found bugs, delete the rest
+5. Fix the bugs
+6. Track "FAILURES FOUND" count for each test
+
+**Key Insight**: Tests must check what SHOULD BE REJECTED, not just what should work.
+
+### Bugs Found (8 Total)
+
+#### 🔴 CRITICAL Bugs (6):
+
+**Bug #1: DoS via Unlimited Alerts**
+- **File**: `webhook_controller.ex:57`
+- **Test**: `webhook_controller_validation_test.exs:19`
+- **Found**: Webhook accepted 1000 alerts, took 2.2 seconds to process
+- **Impact**: Server flooding, memory exhaustion
+- **Fix**: Limit to 100 alerts per webhook
+
+**Bug #2: DoS via Huge Strings**
+- **File**: `webhook_controller.ex:69`
+- **Test**: `webhook_controller_validation_test.exs:37`
+- **Found**: 10MB alert title accepted, crashed with heap overflow
+- **Impact**: Memory exhaustion, server crash
+- **Fix**: Reject payloads > 1MB, truncate strings to 10KB
+
+**Bug #3: Null Bytes Crash PostgreSQL**
+- **File**: `webhook_controller.ex:69`
+- **Test**: `webhook_controller_validation_test.exs:57`
+- **Found**: `Postgrex.Error: invalid byte sequence for encoding "UTF8": 0x00`
+- **Impact**: Server crash, service disruption
+- **Fix**: Sanitize null bytes from all strings before storing
+
+**Bug #4: Type Confusion Crash**
+- **File**: `webhook_controller.ex:66`
+- **Test**: `webhook_controller_validation_test.exs:137`
+- **Found**: `BadMapError: expected a map, got: "not-a-map"`
+- **Impact**: Server crash on malformed webhook
+- **Fix**: Validate types, convert non-maps to empty map
+
+**Bug #7: Email Control Characters**
+- **File**: `user.ex:43`
+- **Test**: `user_validation_test.exs:33`
+- **Found**: Email with `\u0001` (SOH) passed validation
+- **Impact**: Email header injection vulnerability
+- **Fix**: Block control characters in email regex
+
+**Bug #8: Email Null Bytes**
+- **File**: `user.ex:43`
+- **Test**: `user_validation_test.exs:13`
+- **Found**: Email with `\u0000` passed validation
+- **Impact**: Security vulnerability, null byte injection
+- **Fix**: Same as Bug #7
+
+#### 🟠 HIGH Bugs (2):
+
+**Bug #5: Timestamps 100 Years Old**
+- **File**: `webhook_controller.ex:93`
+- **Test**: `webhook_controller_validation_test.exs:83`
+- **Found**: Alert with `1925-01-01` stored (36,863 days ago)
+- **Impact**: Data integrity, broken sorting, UI confusion
+- **Fix**: Validate timestamps within 7 days past / 1 hour future
+
+**Bug #6: Timestamps 10 Years Future**
+- **File**: `webhook_controller.ex:93`
+- **Test**: `webhook_controller_validation_test.exs:110`
+- **Found**: Alert 3650 days in future accepted
+- **Impact**: Data integrity, alerts don't appear
+- **Fix**: Same as Bug #5
+
+### Tests Created
+
+**Webhook Validation Tests** (`webhook_controller_validation_test.exs`):
+- 7 tests total
+- 6 found bugs (86% hit rate)
+- 1 passed (deep nesting handled correctly)
+
+**User Validation Tests** (`user_validation_test.exs`):
+- 9 tests total
+- 2 found bugs (22% hit rate)
+- 7 passed (validation already working)
+
+**Overall Stats**:
+- 16 tests written
+- 8 found real bugs
+- 50% hit rate (exceeds 50% target)
+- **All 16 tests now passing after fixes**
+
+### Fixes Applied
+
+#### Webhook Controller (`webhook_controller.ex`):
+
+```elixir
+defp parse_grafana_webhook(%{"alerts" => alerts}) when is_list(alerts) do
+  cond do
+    # Fix Bug #1: Limit alerts
+    length(alerts) > 100 ->
+      {:error, :too_many_alerts}
+
+    # Fix Bug #2: Check payload size
+    has_huge_fields?(alerts) ->
+      {:error, :payload_too_large}
+
+    true ->
+      alert_data_list = Enum.map(alerts, &parse_grafana_alert/1)
+      {:ok, alert_data_list}
+  end
+end
+
+# Fix Bug #3, #4: Sanitize and validate types
+defp parse_grafana_alert(alert) do
+  labels = ensure_map(Map.get(alert, "labels", %{}))
+  annotations = ensure_map(Map.get(alert, "annotations", %{}))
+
+  %{
+    title: sanitize_string(Map.get(labels, "alertname", "Unknown Alert")),
+    labels: sanitize_map(labels),  # Recursive sanitization
+    annotations: sanitize_map(annotations),
+    fired_at: parse_timestamp(Map.get(alert, "startsAt"))
+  }
+end
+
+defp sanitize_string(value) when is_binary(value) do
+  value
+  |> String.slice(0, 10_000)  # Truncate
+  |> String.replace(<<0>>, "")  # Remove null bytes
+  |> String.replace(~r/[\x00-\x1F\x7F]/, "")  # Remove control chars
+end
+
+# Fix Bug #5, #6: Validate timestamp range
+defp validate_timestamp_range(datetime) do
+  diff_seconds = DateTime.diff(datetime, DateTime.utc_now())
+
+  cond do
+    diff_seconds < -7 * 24 * 60 * 60 -> DateTime.utc_now()  # Too old
+    diff_seconds > 60 * 60 -> DateTime.utc_now()  # Too future
+    true -> datetime
+  end
+end
+```
+
+#### User Schema (`user.ex`):
+
+```elixir
+# Fix Bug #7, #8: Block control characters in email
+defp validate_email(changeset) do
+  changeset
+  |> validate_required([:email])
+  |> validate_format(:email, ~r/^[^\s\x00-\x1F\x7F]+@[^\s\x00-\x1F\x7F]+$/,
+    message: "must have the @ sign and no spaces or control characters")
+  |> validate_length(:email, max: 160)
+end
+```
+
+#### Alert Schema (`alert.ex`):
+
+```elixir
+def changeset(alert, attrs) do
+  alert
+  |> cast(attrs, [...])
+  |> validate_required([:title, :severity, :source, :fired_at])
+  |> validate_length(:title, min: 1, max: 1000)  # Prevent huge titles
+  |> validate_length(:message, max: 10_000)  # Prevent huge messages
+  |> validate_inclusion(:severity, @valid_severities)
+  |> validate_inclusion(:status, @valid_statuses)
+end
+```
+
+### Test Examples
+
+**Example: Validation Testing (finds bugs!)**
+```elixir
+# Test that REJECTS invalid input
+test "rejects webhook with 1000+ alerts (DoS protection)" do
+  large_payload = %{"alerts" => List.duplicate(%{...}, 1000)}
+
+  conn = post(conn, ~p"/api/v1/webhooks/grafana", large_payload)
+
+  # BUG if this returns 200 - should reject!
+  assert conn.status in [400, 413]
+end
+```
+
+**vs Happy Path Testing (finds nothing)**
+```elixir
+# BAD: Only tests valid input
+test "creates alert from webhook" do
+  payload = %{"alerts" => [%{"labels" => %{"alertname" => "Test"}}]}
+
+  conn = post(conn, ~p"/api/v1/webhooks/grafana", payload)
+
+  assert conn.status == 200  # Of course it works!
+end
+```
+
+### Key Lessons
+
+1. **Validation Testing is Powerful**: 50% of tests found bugs vs ~0% for happy path tests
+2. **Test What Should Be Rejected**: Invalid input reveals bugs
+3. **Use Real Attack Vectors**: Null bytes, huge payloads, type confusion
+4. **Run Tests, Don't Guess**: Only actual test failures count as bugs
+5. **Keep Score**: Track "FAILURES FOUND" for each test
+
+### Documentation
+
+Created `docs/ERRATA.md` documenting all 8 bugs with:
+- Exact file and line number
+- Test that found it
+- Description and impact
+- Root cause analysis
+- Fix applied
+
+### Categories
+
+**Bug Types**:
+- Server crashes: 4 (50%)
+- Security vulnerabilities: 2 (25%)
+- Data integrity: 2 (25%)
+
+**Testing Types**:
+- Validation testing: 11 (69%)
+- Boundary testing: 3 (19%)
+- Security testing: 2 (12%)
+
+### Code Statistics
+
+```
+Files Changed: 7
+  - 3 production files (bug fixes)
+  - 2 test files (new validation tests)
+  - 2 documentation files
+
+Lines Added: 1133
+  - 400 lines of validation tests
+  - 150 lines of sanitization code
+  - 583 lines of documentation
+
+Test Coverage:
+  - Before: 83 tests
+  - After: 99 tests (+16)
+  - All tests passing: ✅
+```
+
+### Verification
+
+```bash
+$ mix test test/fangorn_sentinel_web/controllers/api/v1/webhook_controller_validation_test.exs \
+           test/fangorn_sentinel/accounts/user_validation_test.exs
+
+Finished in 0.6 seconds
+16 tests, 0 failures ✅
+```
+
+### Next Steps
+
+1. **Continue validation testing** for other modules:
+   - GraphQL resolvers
+   - Alert routing logic
+   - Schedule calculations
+   - Push notification handling
+
+2. **Apply methodology project-wide**:
+   - Write validation tests for all user input
+   - Test rejection of invalid data
+   - Track failure rates
+   - Delete tests that don't find bugs
+
+3. **Security hardening**:
+   - SQL injection tests
+   - XSS tests
+   - Authentication bypass tests
+   - Rate limiting tests
+
+---
+
+**Session Duration**: ~90 minutes
+**Methodology**: huorn/docs/TESTING.md
+**Tests Written**: 16
+**Bugs Found**: 8 (50% hit rate)
+**Bugs Fixed**: 8/8 (100%)
+**All Tests Passing**: ✅
+
+**Status**: ✅ 8 critical bugs found and fixed through validation testing
+**Next Session**: Continue validation testing for remaining modules

@@ -40,7 +40,8 @@ defmodule FangornSentinel.Accounts.User do
   defp validate_email(changeset) do
     changeset
     |> validate_required([:email])
-    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
+    |> validate_format(:email, ~r/^[^\s\x00-\x1F\x7F]+@[^\s\x00-\x1F\x7F]+$/,
+      message: "must have the @ sign and no spaces or control characters")
     |> validate_length(:email, max: 160)
   end
 

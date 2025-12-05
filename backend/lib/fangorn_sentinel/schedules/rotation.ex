@@ -35,22 +35,38 @@ defmodule FangornSentinel.Schedules.Rotation do
   """
   def current_on_call(%__MODULE__{participants: []} = _rotation, _datetime), do: nil
 
-  def current_on_call(%__MODULE__{} = rotation, datetime \\ DateTime.utc_now()) do
-    days_since_start = Date.diff(DateTime.to_date(datetime), rotation.rotation_start_date)
+  # Define function head for default parameter
+  def current_on_call(rotation, datetime \\ DateTime.utc_now())
 
+  def current_on_call(%__MODULE__{} = rotation, datetime) do
+    # Handle negative days (datetime before rotation start)
+    start_datetime = DateTime.new!(rotation.rotation_start_date, ~T[00:00:00])
+
+    if DateTime.compare(datetime, start_datetime) == :lt do
+      # Before rotation started - return nil or first participant
+      nil
+    else
+      calculate_on_call(rotation, datetime, start_datetime)
+    end
+  end
+
+  defp calculate_on_call(rotation, datetime, start_datetime) do
     case rotation.type do
       :daily ->
+        days_since_start = Date.diff(DateTime.to_date(datetime), rotation.rotation_start_date)
         participant_index = rem(days_since_start, length(rotation.participants))
         Enum.at(rotation.participants, participant_index)
 
       :weekly ->
+        days_since_start = Date.diff(DateTime.to_date(datetime), rotation.rotation_start_date)
         weeks_since_start = div(days_since_start, 7)
         participant_index = rem(weeks_since_start, length(rotation.participants))
         Enum.at(rotation.participants, participant_index)
 
       :custom ->
-        # For custom rotations, use duration_hours to calculate
-        hours_since_start = days_since_start * 24
+        # For custom rotations, use actual elapsed time including hours
+        seconds_since_start = DateTime.diff(datetime, start_datetime, :second)
+        hours_since_start = div(seconds_since_start, 3600)
         shifts_since_start = div(hours_since_start, rotation.duration_hours)
         participant_index = rem(shifts_since_start, length(rotation.participants))
         Enum.at(rotation.participants, participant_index)

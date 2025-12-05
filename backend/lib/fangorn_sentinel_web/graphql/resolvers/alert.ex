@@ -31,19 +31,32 @@ defmodule FangornSentinelWeb.GraphQL.Resolvers.Alert do
   end
 
   def acknowledge(_parent, %{alert_id: alert_id} = args, %{context: %{current_user: user}}) do
-    with {:ok, alert} <- Alerts.get_alert(alert_id),
-         {:ok, updated_alert} <- Alerts.acknowledge_alert(alert, user, args[:note]) do
-      # Publish to subscriptions
-      Absinthe.Subscription.publish(
-        FangornSentinelWeb.Endpoint,
-        updated_alert,
-        acknowledge_alert: "alert:#{alert_id}"
-      )
+    # Validate note length to prevent DoS
+    note = case args[:note] do
+      nil -> nil
+      n when byte_size(n) > 10_000 -> {:error, "Note too long (max 10,000 characters)"}
+      n -> {:ok, n}
+    end
 
-      {:ok, updated_alert}
-    else
-      {:error, :not_found} -> {:error, "Alert not found"}
-      {:error, reason} -> {:error, reason}
+    case note do
+      {:error, msg} ->
+        {:error, msg}
+
+      {:ok, validated_note} ->
+        with {:ok, alert} <- Alerts.get_alert(alert_id),
+             {:ok, updated_alert} <- Alerts.acknowledge_alert(alert, user, validated_note) do
+          # Publish to subscriptions
+          Absinthe.Subscription.publish(
+            FangornSentinelWeb.Endpoint,
+            updated_alert,
+            acknowledge_alert: "alert:#{alert_id}"
+          )
+
+          {:ok, updated_alert}
+        else
+          {:error, :not_found} -> {:error, "Alert not found"}
+          {:error, reason} -> {:error, reason}
+        end
     end
   end
 
@@ -52,19 +65,32 @@ defmodule FangornSentinelWeb.GraphQL.Resolvers.Alert do
   end
 
   def resolve(_parent, %{alert_id: alert_id} = args, %{context: %{current_user: user}}) do
-    with {:ok, alert} <- Alerts.get_alert(alert_id),
-         {:ok, updated_alert} <- Alerts.resolve_alert(alert, user, args[:resolution_note]) do
-      # Publish to subscriptions
-      Absinthe.Subscription.publish(
-        FangornSentinelWeb.Endpoint,
-        updated_alert,
-        resolve_alert: "alert:#{alert_id}"
-      )
+    # Validate resolution_note length
+    note = case args[:resolution_note] do
+      nil -> nil
+      n when byte_size(n) > 10_000 -> {:error, "Resolution note too long (max 10,000 characters)"}
+      n -> {:ok, n}
+    end
 
-      {:ok, updated_alert}
-    else
-      {:error, :not_found} -> {:error, "Alert not found"}
-      {:error, reason} -> {:error, reason}
+    case note do
+      {:error, msg} ->
+        {:error, msg}
+
+      {:ok, validated_note} ->
+        with {:ok, alert} <- Alerts.get_alert(alert_id),
+             {:ok, updated_alert} <- Alerts.resolve_alert(alert, user, validated_note) do
+          # Publish to subscriptions
+          Absinthe.Subscription.publish(
+            FangornSentinelWeb.Endpoint,
+            updated_alert,
+            resolve_alert: "alert:#{alert_id}"
+          )
+
+          {:ok, updated_alert}
+        else
+          {:error, :not_found} -> {:error, "Alert not found"}
+          {:error, reason} -> {:error, reason}
+        end
     end
   end
 

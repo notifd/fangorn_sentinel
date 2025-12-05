@@ -160,7 +160,14 @@ defmodule FangornSentinel.Alerts do
 
   # Private helper functions
 
-  defp apply_filters(query, opts) do
+  defp apply_filters(query, opts) when is_map(opts) do
+    query
+    |> apply_filter_if_present(opts, :status, fn q, val -> where(q, [a], a.status == ^val) end)
+    |> apply_filter_if_present(opts, :severity, fn q, val -> where(q, [a], a.severity == ^val) end)
+    |> apply_filter_if_present(opts, :source, fn q, val -> where(q, [a], a.source == ^val) end)
+  end
+
+  defp apply_filters(query, opts) when is_list(opts) do
     Enum.reduce(opts, query, fn
       {:status, status}, query ->
         where(query, [a], a.status == ^status)
@@ -176,10 +183,37 @@ defmodule FangornSentinel.Alerts do
     end)
   end
 
-  defp apply_limit(query, opts) do
+  defp apply_filter_if_present(query, map, key, filter_fn) do
+    case Map.get(map, key) do
+      nil -> query
+      value -> filter_fn.(query, value)
+    end
+  end
+
+  defp apply_limit(query, opts) when is_map(opts) do
+    # Validate and clamp limit
+    limit = case Map.get(opts, :limit) do
+      nil -> 50  # Default
+      val when is_integer(val) and val > 0 -> min(val, 1000)  # Clamp to max 1000
+      _ -> 50  # Invalid value, use default
+    end
+
+    offset = case Map.get(opts, :offset) do
+      nil -> 0
+      val when is_integer(val) and val >= 0 -> val
+      _ -> 0  # Negative offset, use 0
+    end
+
+    query
+    |> limit(^limit)
+    |> offset(^offset)
+  end
+
+  defp apply_limit(query, opts) when is_list(opts) do
     case Keyword.get(opts, :limit) do
       nil -> query
-      limit -> limit(query, ^limit)
+      limit when is_integer(limit) and limit > 0 -> limit(query, ^min(limit, 1000))
+      _ -> query
     end
   end
 end

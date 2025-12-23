@@ -42,6 +42,11 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
     field :my_schedule, :schedule do
       resolve &Resolvers.Schedule.my_schedule/3
     end
+
+    @desc "List my registered devices"
+    field :my_devices, list_of(:device) do
+      resolve &Resolvers.Device.list_devices/3
+    end
   end
 
   mutation do
@@ -60,6 +65,13 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
       arg :device_name, :string
 
       resolve &Resolvers.Device.register/3
+    end
+
+    @desc "Unregister a device from push notifications"
+    field :unregister_device, :boolean do
+      arg :token, non_null(:string)
+
+      resolve &Resolvers.Device.unregister/3
     end
 
     @desc "Acknowledge an alert"

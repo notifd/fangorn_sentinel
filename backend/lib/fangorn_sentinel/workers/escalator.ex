@@ -41,8 +41,10 @@ defmodule FangornSentinel.Workers.Escalator do
 
       Logger.info("Escalating alert #{alert_id} - policy #{policy_id} step #{step_number}")
 
-      # Notify all targets in this step
-      notify_step(alert, step)
+      # Notify all targets in this step and record history
+      user_ids = notify_step(alert, step)
+      channels = Enum.map(step.channels || [], &to_string/1)
+      Escalation.record_step_executed(alert_id, policy_id, step_number, user_ids, channels)
 
       # Schedule next step if there is one
       schedule_next_step(alert_id, policy, step_number)
@@ -51,6 +53,7 @@ defmodule FangornSentinel.Workers.Escalator do
     else
       {:cancel, reason} = cancel ->
         Logger.info("Escalation cancelled for alert #{alert_id}: #{reason}")
+        Escalation.record_escalation_cancelled(alert_id, policy_id, step_number, reason)
         cancel
 
       {:error, reason} = error ->
@@ -74,6 +77,8 @@ defmodule FangornSentinel.Workers.Escalator do
         {:error, :no_policy}
 
       policy ->
+        # Record that escalation started
+        Escalation.record_escalation_started(alert.id, policy.id)
         enqueue_step(alert.id, policy.id, 1)
     end
   end
@@ -126,6 +131,9 @@ defmodule FangornSentinel.Workers.Escalator do
     end)
 
     Logger.info("Escalation step #{step.step_number}: notifying #{length(user_ids)} users via #{inspect(step.channels)}")
+
+    # Return user_ids for history tracking
+    user_ids
   end
 
   defp collect_notification_targets(step) do
@@ -153,6 +161,7 @@ defmodule FangornSentinel.Workers.Escalator do
     case next_step do
       nil ->
         Logger.info("Escalation complete for alert #{alert_id} - no more steps")
+        Escalation.record_escalation_completed(alert_id, policy.id, current_step_number)
         :ok
 
       step ->

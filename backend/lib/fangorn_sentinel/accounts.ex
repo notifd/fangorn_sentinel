@@ -5,7 +5,7 @@ defmodule FangornSentinel.Accounts do
 
   import Ecto.Query, warn: false
   alias FangornSentinel.Repo
-  alias FangornSentinel.Accounts.User
+  alias FangornSentinel.Accounts.{User, UserToken}
 
   ## User functions
 
@@ -130,5 +130,121 @@ defmodule FangornSentinel.Accounts do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
+  end
+
+  ## Session functions
+
+  @doc """
+  Generates a session token for a user.
+  """
+  def generate_user_session_token(user) do
+    {token, user_token} = UserToken.build_session_token(user)
+    Repo.insert!(user_token)
+    token
+  end
+
+  @doc """
+  Gets the user with the given session token.
+  """
+  def get_user_by_session_token(token) do
+    {:ok, query} = UserToken.verify_session_token_query(token)
+    Repo.one(query)
+  end
+
+  @doc """
+  Deletes the session token.
+  """
+  def delete_user_session_token(token) do
+    Repo.delete_all(from t in UserToken, where: t.token == ^token and t.context == "session")
+    :ok
+  end
+
+  ## Password reset functions
+
+  @doc """
+  Delivers the reset password email to the given user.
+
+  ## Examples
+
+      iex> deliver_user_reset_password_instructions(user, &url(~p"/users/reset_password/\#{&1}"))
+      {:ok, %{to: ..., body: ...}}
+
+  """
+  def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
+      when is_function(reset_password_url_fun, 1) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
+    Repo.insert!(user_token)
+    # TODO: Actually send the email via Mailer
+    {:ok, %{to: user.email, url: reset_password_url_fun.(encoded_token)}}
+  end
+
+  @doc """
+  Gets the user by reset password token.
+  """
+  def get_user_by_reset_password_token(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
+         %User{} = user <- Repo.one(query) do
+      user
+    else
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Resets the user password.
+  """
+  def reset_user_password(user, attrs) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.password_changeset(user, attrs))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  ## Email verification functions
+
+  @doc """
+  Delivers the confirmation email instructions to the given user.
+  """
+  def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
+      when is_function(confirmation_url_fun, 1) do
+    if user.confirmed_at do
+      {:error, :already_confirmed}
+    else
+      {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
+      Repo.insert!(user_token)
+      # TODO: Actually send the email via Mailer
+      {:ok, %{to: user.email, url: confirmation_url_fun.(encoded_token)}}
+    end
+  end
+
+  @doc """
+  Confirms a user by the given token.
+  """
+  def confirm_user(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
+         %User{} = user <- Repo.one(query),
+         {:ok, %{user: user}} <- confirm_user_multi(user) |> Repo.transaction() do
+      {:ok, user}
+    else
+      _ -> :error
+    end
+  end
+
+  defp confirm_user_multi(user) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
+  end
+
+  @doc """
+  Deletes all tokens for a user (logout from all devices).
+  """
+  def delete_all_user_tokens(user) do
+    Repo.delete_all(UserToken.user_and_contexts_query(user, :all))
+    :ok
   end
 end

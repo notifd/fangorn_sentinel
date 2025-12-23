@@ -58,6 +58,25 @@ defmodule FangornSentinel.Accounts.User do
   end
 
   @doc """
+  Changeset for password changes (reset password).
+  """
+  def password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 8, max: 72)
+    |> hash_password()
+  end
+
+  @doc """
+  Changeset for confirming the user email.
+  """
+  def confirm_changeset(user) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    change(user, confirmed_at: now)
+  end
+
+  @doc """
   Verifies the password.
 
   If there is no user or the user doesn't have a password, we call

@@ -64,18 +64,23 @@ defmodule FangornSentinel.Schedules do
 
   @doc """
   Returns the user ID of who is currently on call for a given schedule.
+
+  Uses the schedule's timezone for rotation calculation.
   """
   def who_is_on_call(schedule_id, datetime \\ DateTime.utc_now()) do
     schedule = get_schedule_with_rotations!(schedule_id)
+    timezone = schedule.timezone || "UTC"
 
     schedule.rotations
-    |> Enum.map(&Rotation.current_on_call(&1, datetime))
+    |> Enum.map(&Rotation.current_on_call(&1, datetime, timezone))
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq()
   end
 
   @doc """
   Returns the user ID of who is currently on call for a given team.
+
+  Uses each schedule's timezone for rotation calculation.
   """
   def who_is_on_call_for_team(team_id, datetime \\ DateTime.utc_now()) do
     Schedule
@@ -83,8 +88,9 @@ defmodule FangornSentinel.Schedules do
     |> Repo.all()
     |> Repo.preload(:rotations)
     |> Enum.flat_map(fn schedule ->
+      timezone = schedule.timezone || "UTC"
       schedule.rotations
-      |> Enum.map(&Rotation.current_on_call(&1, datetime))
+      |> Enum.map(&Rotation.current_on_call(&1, datetime, timezone))
     end)
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq()

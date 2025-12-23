@@ -32,21 +32,41 @@ defmodule FangornSentinel.Schedules.Rotation do
 
   @doc """
   Calculate who is currently on call for this rotation.
+
+  Optionally accepts a timezone to interpret the rotation start date.
+  If no timezone is provided, UTC is assumed.
   """
-  def current_on_call(%__MODULE__{participants: []} = _rotation, _datetime), do: nil
+  def current_on_call(%__MODULE__{participants: []} = _rotation, _datetime, _timezone \\ "UTC"), do: nil
 
   # Define function head for default parameter
-  def current_on_call(rotation, datetime \\ DateTime.utc_now())
+  def current_on_call(rotation, datetime \\ DateTime.utc_now(), timezone \\ "UTC")
 
-  def current_on_call(%__MODULE__{} = rotation, datetime) do
+  def current_on_call(%__MODULE__{} = rotation, datetime, timezone) do
+    # Convert datetime to the schedule's timezone for calculation
+    local_datetime = to_local_datetime(datetime, timezone)
+
     # Handle negative days (datetime before rotation start)
-    start_datetime = DateTime.new!(rotation.rotation_start_date, ~T[00:00:00])
+    start_datetime = DateTime.new!(rotation.rotation_start_date, ~T[00:00:00], timezone)
+    |> case do
+      {:ok, dt} -> dt
+      {:ambiguous, dt, _} -> dt  # Use first interpretation for ambiguous times
+      {:gap, _, dt} -> dt  # Use later time for gaps
+      _ -> DateTime.new!(rotation.rotation_start_date, ~T[00:00:00])  # Fallback to UTC
+    end
 
-    if DateTime.compare(datetime, start_datetime) == :lt do
+    if DateTime.compare(local_datetime, start_datetime) == :lt do
       # Before rotation started - return nil or first participant
       nil
     else
-      calculate_on_call(rotation, datetime, start_datetime)
+      calculate_on_call(rotation, local_datetime, start_datetime)
+    end
+  end
+
+  defp to_local_datetime(datetime, "UTC"), do: datetime
+  defp to_local_datetime(datetime, timezone) do
+    case DateTime.shift_zone(datetime, timezone) do
+      {:ok, local} -> local
+      {:error, _} -> datetime  # Fallback to original if timezone invalid
     end
   end
 

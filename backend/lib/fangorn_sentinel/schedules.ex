@@ -5,7 +5,7 @@ defmodule FangornSentinel.Schedules do
 
   import Ecto.Query, warn: false
   alias FangornSentinel.Repo
-  alias FangornSentinel.Schedules.{Schedule, Rotation}
+  alias FangornSentinel.Schedules.{Schedule, Rotation, Override}
 
   @doc """
   Returns the list of schedules.
@@ -88,5 +88,71 @@ defmodule FangornSentinel.Schedules do
     end)
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq()
+  end
+
+  # Override functions
+
+  @doc """
+  Lists all overrides for a schedule.
+  """
+  def list_overrides(schedule_id) do
+    Override
+    |> where([o], o.schedule_id == ^schedule_id)
+    |> order_by([o], desc: o.start_time)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets active overrides for a schedule at a given time.
+  """
+  def get_active_overrides(schedule_id, datetime \\ DateTime.utc_now()) do
+    Override
+    |> where([o], o.schedule_id == ^schedule_id)
+    |> where([o], o.start_time <= ^datetime and o.end_time > ^datetime)
+    |> Repo.all()
+  end
+
+  @doc """
+  Creates a schedule override.
+  """
+  def create_override(attrs \\ %{}) do
+    %Override{}
+    |> Override.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates an override.
+  """
+  def update_override(%Override{} = override, attrs) do
+    override
+    |> Override.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes an override.
+  """
+  def delete_override(%Override{} = override) do
+    Repo.delete(override)
+  end
+
+  @doc """
+  Returns who is on call, considering overrides.
+  Overrides take precedence over regular rotation.
+  """
+  def who_is_on_call_with_overrides(schedule_id, datetime \\ DateTime.utc_now()) do
+    # Check for active overrides first
+    active_overrides = get_active_overrides(schedule_id, datetime)
+
+    if Enum.any?(active_overrides) do
+      # Return override users
+      active_overrides
+      |> Enum.map(& &1.user_id)
+      |> Enum.uniq()
+    else
+      # Fall back to regular rotation
+      who_is_on_call(schedule_id, datetime)
+    end
   end
 end

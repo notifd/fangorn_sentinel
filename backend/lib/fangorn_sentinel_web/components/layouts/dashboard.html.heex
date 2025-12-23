@@ -1,0 +1,17 @@
+<div class="drawer lg:drawer-open">
+  <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
+
+  <div class="drawer-content flex flex-col">
+    <FangornSentinelWeb.DashboardComponents.mobile_navbar title={assigns[:page_title] || "Dashboard"} />
+
+    <main class="flex-1 p-4 lg:p-6 bg-base-100">
+      <div class="max-w-7xl mx-auto">
+        {@inner_content}
+      </div>
+    </main>
+  </div>
+
+  <FangornSentinelWeb.DashboardComponents.mobile_drawer current_path={assigns[:current_path] || "/"} />
+</div>
+
+<.flash_group flash={@flash} />

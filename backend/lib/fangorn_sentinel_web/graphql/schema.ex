@@ -43,6 +43,17 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
       resolve &Resolvers.Schedule.my_schedule/3
     end
 
+    @desc "List all schedules"
+    field :schedules, list_of(:schedule) do
+      resolve &Resolvers.Schedule.list_schedules/3
+    end
+
+    @desc "Get schedule by ID"
+    field :schedule, :schedule do
+      arg :id, non_null(:id)
+      resolve &Resolvers.Schedule.get_schedule/3
+    end
+
     @desc "List my registered devices"
     field :my_devices, list_of(:device) do
       resolve &Resolvers.Device.list_devices/3

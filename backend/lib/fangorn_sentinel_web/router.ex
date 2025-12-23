@@ -57,6 +57,13 @@ defmodule FangornSentinelWeb.Router do
       get "/overrides", ScheduleController, :list_overrides
       post "/overrides", ScheduleController, :create_override
     end
+
+    # Escalation policy management
+    resources "/escalation-policies", EscalationController, except: [:new, :edit] do
+      get "/steps", EscalationController, :list_steps
+      post "/steps", EscalationController, :create_step
+      post "/test", EscalationController, :test
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

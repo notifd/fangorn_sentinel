@@ -75,6 +75,11 @@ jobs:
           mix local.hex --force
           mix deps.get
 
+      - name: Compile dependencies
+        run: |
+          cd backend
+          mix deps.compile
+
       - name: Compile code
         run: |
           cd backend

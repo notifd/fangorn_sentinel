@@ -3123,3 +3123,107 @@ Unexplored areas for Round 4+:
 
 **Status**: ✅ 26 total bugs found and fixed (exceeds 25 target)
 **Next Session**: Continue with Round 4 or move to feature development
+
+---
+
+## 2025-12-22 - Push Infrastructure Implementation (Issue #42)
+
+### Summary
+Completed backend push infrastructure for mobile notifications. Updated the existing Pigeon integration from 1.x to 2.x API which requires dispatcher modules. Added GraphQL operations for device management.
+
+### What Was Done
+
+#### 1. Pigeon 2.x Migration
+The project had Pigeon 2.0.0 installed but the APNS/FCM modules were using the 1.x API. Pigeon 2.x uses a dispatcher pattern instead of the old direct API.
+
+**New dispatcher modules created**:
+- `lib/fangorn_sentinel/push/apns_dispatcher.ex` - APNs dispatcher using `use Pigeon.Dispatcher`
+- `lib/fangorn_sentinel/push/fcm_dispatcher.ex` - FCM dispatcher using `use Pigeon.Dispatcher`
+
+#### 2. APNS/FCM Client Rewrite
+Rewrote both push modules to use Pigeon 2.x API:
+
+**lib/fangorn_sentinel/push/apns.ex**:
+- Uses APNSDispatcher.push/1 instead of Pigeon.APNS.push/2
+- Graceful handling when not configured (logs warning, returns :ok)
+- Proper error handling for bad_device_token, unregistered, etc.
+- Message truncation (title: 100 chars, body: 500 chars)
+- Critical alert payload with interruption-level: "critical"
+
+**lib/fangorn_sentinel/push/fcm.ex**:
+- Uses FCMDispatcher.push/1 instead of Pigeon.FCM.push/1
+- Similar graceful handling when not configured
+- FCM v1 API payload with high priority
+- Proper Android notification channel configuration
+
+#### 3. Application Supervision Tree
+Updated `application.ex` for conditional startup of push services:
+- Goth (Google Cloud auth for FCM) - starts only if configured
+- FCMDispatcher - starts only if configured
+- APNSDispatcher - starts only if configured
+
+This prevents crashes when push services aren't configured (development/testing).
+
+#### 4. Dependencies
+Added goth dependency for FCM authentication:
+```elixir
+{:goth, "~> 1.4"}
+```
+
+#### 5. Configuration Documentation
+Added comprehensive documentation to `config/config.exs` showing how to configure:
+- APNs (token-based authentication with .p8 key)
+- FCM (service account JSON for Google Cloud)
+
+#### 6. GraphQL Device Operations
+Enhanced device management via GraphQL:
+- Fixed platform atom-to-string conversion in register mutation
+- Added `my_devices` query to list user's registered devices
+- Added `unregister_device` mutation
+
+#### 7. Tests
+Created tests for both push modules (11 tests total):
+- `test/fangorn_sentinel/push/apns_test.exs` (5 tests)
+- `test/fangorn_sentinel/push/fcm_test.exs` (6 tests)
+
+Tests cover:
+- Graceful handling when not configured
+- configured?() function
+- nil message handling
+- nil source handling
+- Long title/message truncation
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `lib/fangorn_sentinel/push/apns_dispatcher.ex` | New - Pigeon 2.x dispatcher |
+| `lib/fangorn_sentinel/push/fcm_dispatcher.ex` | New - Pigeon 2.x dispatcher |
+| `lib/fangorn_sentinel/push/apns.ex` | Rewritten for Pigeon 2.x |
+| `lib/fangorn_sentinel/push/fcm.ex` | Rewritten for Pigeon 2.x |
+| `lib/fangorn_sentinel/application.ex` | Conditional push service startup |
+| `lib/fangorn_sentinel_web/graphql/resolvers/device.ex` | Enhanced with list/unregister |
+| `lib/fangorn_sentinel_web/graphql/schema.ex` | Added my_devices, unregister_device |
+| `config/config.exs` | Push configuration documentation |
+| `mix.exs` | Added goth dependency |
+| `test/fangorn_sentinel/push/apns_test.exs` | New - 5 tests |
+| `test/fangorn_sentinel/push/fcm_test.exs` | New - 6 tests |
+
+### Technical Notes
+
+1. **Pigeon 2.x API Change**: The 2.x version uses dispatcher modules that are supervised processes. Configuration is done per-dispatcher module in config.exs.
+
+2. **Goth for FCM**: FCM v1 API requires OAuth2 authentication. Goth handles fetching and refreshing Google Cloud access tokens from a service account JSON.
+
+3. **Conditional Startup**: Uses `Application.get_env/2` to check if services are configured before adding to supervision tree.
+
+---
+
+**Session Duration**: ~30 minutes
+**Tests Written**: 11
+**Tests Passing**: ✅ All 11 push tests pass
+**PR Created**: #76
+**Issue**: #42 (closes on merge)
+
+**Status**: ✅ Push Infrastructure Complete
+**Next Session**: Merge PR, continue feature development

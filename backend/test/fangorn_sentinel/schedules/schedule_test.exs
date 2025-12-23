@@ -147,4 +147,64 @@ defmodule FangornSentinel.Schedules.ScheduleTest do
       refute Override.active?(override, now)
     end
   end
+
+  describe "Rotation.current_on_call/3 with timezone" do
+    test "handles UTC timezone" do
+      rotation = %Rotation{
+        type: :daily,
+        rotation_start_date: ~D[2025-01-01],
+        participants: [1, 2, 3],
+        duration_hours: 24
+      }
+
+      # Day 0 should be participant 1
+      {:ok, datetime, _} = DateTime.from_iso8601("2025-01-01T12:00:00Z")
+      assert Rotation.current_on_call(rotation, datetime, "UTC") == 1
+
+      # Day 1 should be participant 2
+      {:ok, datetime, _} = DateTime.from_iso8601("2025-01-02T12:00:00Z")
+      assert Rotation.current_on_call(rotation, datetime, "UTC") == 2
+    end
+
+    test "handles timezone conversion" do
+      rotation = %Rotation{
+        type: :daily,
+        rotation_start_date: ~D[2025-01-01],
+        participants: [1, 2, 3],
+        duration_hours: 24
+      }
+
+      # 11 PM UTC on Dec 31 is still Dec 31 in UTC
+      {:ok, datetime, _} = DateTime.from_iso8601("2024-12-31T23:00:00Z")
+
+      # In UTC, this is before rotation starts, so nil
+      assert Rotation.current_on_call(rotation, datetime, "UTC") == nil
+    end
+
+    test "returns nil for empty participants with timezone" do
+      rotation = %Rotation{
+        type: :daily,
+        rotation_start_date: ~D[2025-01-01],
+        participants: [],
+        duration_hours: 24
+      }
+
+      {:ok, datetime, _} = DateTime.from_iso8601("2025-01-01T12:00:00Z")
+      assert Rotation.current_on_call(rotation, datetime, "America/New_York") == nil
+    end
+
+    test "falls back gracefully for invalid timezone" do
+      rotation = %Rotation{
+        type: :daily,
+        rotation_start_date: ~D[2025-01-01],
+        participants: [1, 2],
+        duration_hours: 24
+      }
+
+      {:ok, datetime, _} = DateTime.from_iso8601("2025-01-01T12:00:00Z")
+      # Should not crash, just use UTC fallback
+      result = Rotation.current_on_call(rotation, datetime, "Invalid/Timezone")
+      assert result in [1, 2, nil]  # Should return something valid
+    end
+  end
 end

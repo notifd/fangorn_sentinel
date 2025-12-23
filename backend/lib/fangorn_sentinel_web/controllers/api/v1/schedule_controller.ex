@@ -5,13 +5,12 @@ defmodule FangornSentinelWeb.API.V1.ScheduleController do
   use FangornSentinelWeb, :controller
 
   alias FangornSentinel.Schedules
-  alias FangornSentinel.Schedules.{Schedule, Rotation, Override}
 
   action_fallback FangornSentinelWeb.FallbackController
 
   # Schedule CRUD
 
-  def index(conn, params) do
+  def index(conn, _params) do
     schedules = Schedules.list_schedules()
     render(conn, :index, schedules: schedules)
   end

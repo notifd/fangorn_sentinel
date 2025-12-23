@@ -99,6 +99,7 @@ defmodule FangornSentinel.Schedules do
     |> Repo.preload(:rotations)
     |> Enum.flat_map(fn schedule ->
       timezone = schedule.timezone || "UTC"
+
       schedule.rotations
       |> Enum.map(&Rotation.current_on_call(&1, datetime, timezone))
     end)
@@ -151,6 +152,21 @@ defmodule FangornSentinel.Schedules do
   """
   def delete_override(%Override{} = override) do
     Repo.delete(override)
+  end
+
+  @doc """
+  Gets schedules that include a specific user in their rotations.
+  Returns the first schedule found for the user.
+  """
+  def get_user_schedule(user_id) do
+    Schedule
+    |> Repo.all()
+    |> Repo.preload(:rotations)
+    |> Enum.find(fn schedule ->
+      Enum.any?(schedule.rotations, fn rotation ->
+        user_id in (rotation.participants || [])
+      end)
+    end)
   end
 
   @doc """

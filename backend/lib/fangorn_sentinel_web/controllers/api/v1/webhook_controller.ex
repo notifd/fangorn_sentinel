@@ -2,7 +2,6 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
   use FangornSentinelWeb, :controller
 
   alias FangornSentinel.Alerts
-  alias FangornSentinel.Workers.AlertRouter
 
   @doc """
   Handles incoming webhooks from Grafana AlertManager.
@@ -70,6 +69,8 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
     end
   end
 
+  defp parse_grafana_webhook(_), do: {:error, :invalid_payload}
+
   # Check if any field in alerts is excessively large (> 1MB)
   defp has_huge_fields?(alerts) do
     Enum.any?(alerts, fn alert ->
@@ -84,12 +85,12 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
   end
 
   defp check_map_size(value) when is_binary(value), do: byte_size(value)
+
   defp check_map_size(value) when is_list(value) do
     Enum.reduce(value, 0, fn item, acc -> acc + check_map_size(item) end)
   end
-  defp check_map_size(_), do: 0
 
-  defp parse_grafana_webhook(_), do: {:error, :invalid_payload}
+  defp check_map_size(_), do: 0
 
   defp parse_grafana_alert(alert) do
     # Ensure labels and annotations are maps, not other types
@@ -126,12 +127,17 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
   # Remove null bytes and control characters from strings (PostgreSQL UTF8 doesn't allow them)
   # Also truncate to prevent DoS via huge strings
   defp sanitize_string(nil), do: nil
+
   defp sanitize_string(value) when is_binary(value) do
     value
-    |> String.slice(0, 10_000)  # Truncate to 10KB max
-    |> String.replace(<<0>>, "")  # Remove null bytes
-    |> String.replace(~r/[\x00-\x1F\x7F]/, "")  # Remove control characters
+    # Truncate to 10KB max
+    |> String.slice(0, 10_000)
+    # Remove null bytes
+    |> String.replace(<<0>>, "")
+    # Remove control characters
+    |> String.replace(~r/[\x00-\x1F\x7F]/, "")
   end
+
   defp sanitize_string(_), do: nil
 
   defp get_alert_message(annotations) do
@@ -152,6 +158,7 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
       {:ok, datetime, _offset} ->
         # Validate timestamp is reasonable (within past 7 days or future 1 hour)
         validate_timestamp_range(datetime)
+
       _ ->
         DateTime.utc_now()
     end
@@ -198,7 +205,7 @@ defmodule FangornSentinelWeb.API.V1.WebhookController do
     end
   end
 
-  defp enqueue_routing_job(alert) do
+  defp enqueue_routing_job(_alert) do
     # TODO: Implement actual on-call schedule lookup
     # For now, we'll skip enqueueing if no on-call user is available
     # This will be replaced with Schedule.who_is_on_call?() in Phase 2

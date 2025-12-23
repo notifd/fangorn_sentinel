@@ -54,6 +54,16 @@ defmodule FangornSentinel.Schedules do
   end
 
   @doc """
+  Lists rotations for a schedule.
+  """
+  def list_rotations(schedule_id) do
+    Rotation
+    |> where([r], r.schedule_id == ^schedule_id)
+    |> order_by([r], asc: r.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
   Creates a rotation for a schedule.
   """
   def create_rotation(attrs \\ %{}) do

@@ -49,6 +49,14 @@ defmodule FangornSentinelWeb.Router do
     # Device registration (for mobile apps)
     post "/devices/register", DeviceController, :register
     delete "/devices/unregister", DeviceController, :unregister
+
+    # Schedule management
+    resources "/schedules", ScheduleController, except: [:new, :edit] do
+      get "/on-call", ScheduleController, :who_is_on_call
+      post "/rotations", ScheduleController, :create_rotation
+      get "/overrides", ScheduleController, :list_overrides
+      post "/overrides", ScheduleController, :create_override
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

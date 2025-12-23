@@ -13,6 +13,9 @@ defmodule FangornSentinel.Workers.AlertRouter do
     max_attempts: 3
 
   alias FangornSentinel.Alerts
+  alias FangornSentinel.Workers.Escalator
+
+  require Logger
 
   @doc """
   Performs the alert routing job.
@@ -95,8 +98,12 @@ defmodule FangornSentinel.Workers.AlertRouter do
   defp assign_alert(alert, on_call_user_id) do
     case Alerts.update_alert(alert, %{assigned_to_id: on_call_user_id}) do
       {:ok, updated_alert} ->
-        # Enqueue notification job
+        # Enqueue immediate notification job
         FangornSentinel.Workers.Notifier.enqueue_for_alert(updated_alert.id, on_call_user_id)
+
+        # Start escalation workflow
+        start_escalation_for_alert(updated_alert)
+
         :ok
 
       {:error, changeset} ->
@@ -111,6 +118,22 @@ defmodule FangornSentinel.Workers.AlertRouter do
     # Catch constraint exceptions that bubble up
     Ecto.ConstraintError ->
       {:error, :user_not_found}
+  end
+
+  defp start_escalation_for_alert(alert) do
+    case Escalator.start_escalation(alert) do
+      {:ok, _job} ->
+        Logger.info("Started escalation for alert #{alert.id}")
+        :ok
+
+      {:error, :no_policy} ->
+        Logger.debug("No escalation policy for alert #{alert.id}")
+        :ok
+
+      {:error, reason} ->
+        Logger.warning("Failed to start escalation for alert #{alert.id}: #{inspect(reason)}")
+        :ok
+    end
   end
 
   defp has_constraint_error?(changeset, field) do

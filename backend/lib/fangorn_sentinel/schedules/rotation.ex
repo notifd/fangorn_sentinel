@@ -36,10 +36,10 @@ defmodule FangornSentinel.Schedules.Rotation do
   Optionally accepts a timezone to interpret the rotation start date.
   If no timezone is provided, UTC is assumed.
   """
-  def current_on_call(%__MODULE__{participants: []} = _rotation, _datetime, _timezone \\ "UTC"), do: nil
-
-  # Define function head for default parameter
+  # Function head with defaults
   def current_on_call(rotation, datetime \\ DateTime.utc_now(), timezone \\ "UTC")
+
+  def current_on_call(%__MODULE__{participants: []}, _datetime, _timezone), do: nil
 
   def current_on_call(%__MODULE__{} = rotation, datetime, timezone) do
     # Convert datetime to the schedule's timezone for calculation

@@ -5,7 +5,7 @@ defmodule FangornSentinel.Escalation do
 
   import Ecto.Query, warn: false
   alias FangornSentinel.Repo
-  alias FangornSentinel.Escalation.{Policy, Step}
+  alias FangornSentinel.Escalation.{History, Policy, Step}
 
   @doc """
   Returns the list of escalation policies.
@@ -100,5 +100,79 @@ defmodule FangornSentinel.Escalation do
     |> order_by([s], asc: s.step_number)
     |> limit(1)
     |> Repo.one()
+  end
+
+  # History functions
+
+  @doc """
+  Records an escalation history entry.
+  """
+  def record_history(attrs) do
+    %History{}
+    |> History.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Records that escalation has started for an alert.
+  """
+  def record_escalation_started(alert_id, policy_id) do
+    record_history(%{
+      alert_id: alert_id,
+      policy_id: policy_id,
+      step_number: 0,
+      action: "escalation_started",
+      metadata: %{started_at: DateTime.utc_now()}
+    })
+  end
+
+  @doc """
+  Records that an escalation step was executed.
+  """
+  def record_step_executed(alert_id, policy_id, step_number, user_ids, channels) do
+    record_history(%{
+      alert_id: alert_id,
+      policy_id: policy_id,
+      step_number: step_number,
+      action: "step_executed",
+      notified_user_ids: user_ids,
+      channels_used: channels
+    })
+  end
+
+  @doc """
+  Records that escalation was cancelled (alert acknowledged/resolved).
+  """
+  def record_escalation_cancelled(alert_id, policy_id, step_number, reason) do
+    record_history(%{
+      alert_id: alert_id,
+      policy_id: policy_id,
+      step_number: step_number,
+      action: "escalation_cancelled",
+      metadata: %{reason: to_string(reason), cancelled_at: DateTime.utc_now()}
+    })
+  end
+
+  @doc """
+  Records that escalation completed (all steps executed).
+  """
+  def record_escalation_completed(alert_id, policy_id, final_step) do
+    record_history(%{
+      alert_id: alert_id,
+      policy_id: policy_id,
+      step_number: final_step,
+      action: "escalation_completed",
+      metadata: %{completed_at: DateTime.utc_now()}
+    })
+  end
+
+  @doc """
+  Gets escalation history for an alert.
+  """
+  def get_history_for_alert(alert_id) do
+    History
+    |> where([h], h.alert_id == ^alert_id)
+    |> order_by([h], asc: h.inserted_at)
+    |> Repo.all()
   end
 end

@@ -17,19 +17,43 @@ defmodule FangornSentinel.Push do
 
   """
   def register_device(attrs) do
-    # Try to find existing device by token
-    case Repo.get_by(PushDevice, device_token: attrs[:device_token]) do
-      nil ->
-        %PushDevice{}
-        |> PushDevice.changeset(attrs)
-        |> Repo.insert()
+    # Sanitize and validate device_token before lookup
+    token = attrs[:device_token] || attrs["device_token"]
 
-      device ->
-        device
+    # Handle nil or empty token - return validation error
+    if is_nil(token) or (is_binary(token) and String.trim(token) == "") do
+      changeset = %PushDevice{}
         |> PushDevice.changeset(attrs)
-        |> Repo.update()
+        |> Ecto.Changeset.add_error(:device_token, "can't be blank")
+      {:error, changeset}
+    else
+      # Sanitize token before lookup (remove null bytes, limit length)
+      sanitized_token = sanitize_token(token)
+      sanitized_attrs = Map.put(attrs, :device_token, sanitized_token)
+
+      # Try to find existing device by token
+      case Repo.get_by(PushDevice, device_token: sanitized_token) do
+        nil ->
+          %PushDevice{}
+          |> PushDevice.changeset(sanitized_attrs)
+          |> Repo.insert()
+
+        device ->
+          device
+          |> PushDevice.changeset(sanitized_attrs)
+          |> Repo.update()
+      end
     end
   end
+
+  # Sanitize device token: remove null bytes, limit length
+  defp sanitize_token(token) when is_binary(token) do
+    token
+    |> String.replace(<<0>>, "")  # Remove null bytes
+    |> String.replace(~r/[\x00-\x1F\x7F]/, "")  # Remove control characters
+    |> String.slice(0, 255)  # Limit to database column size
+  end
+  defp sanitize_token(_), do: ""
 
   @doc """
   Gets devices for a user.

@@ -41,6 +41,7 @@ defmodule FangornSentinel.Push.PushDevice do
       :last_active_at
     ])
     |> validate_required([:user_id, :platform, :device_token])
+    |> validate_length(:device_token, min: 1, max: 255)
     |> validate_inclusion(:platform, @valid_platforms)
     |> unique_constraint(:device_token)
     |> foreign_key_constraint(:user_id)

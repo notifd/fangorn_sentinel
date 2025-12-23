@@ -23,7 +23,15 @@ defmodule FangornSentinel.Accounts do
       nil
 
   """
-  def get_user(id), do: Repo.get(User, id)
+  def get_user(nil), do: nil
+  def get_user(id) when is_integer(id) and id > 0, do: Repo.get(User, id)
+  def get_user(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} when int_id > 0 -> Repo.get(User, int_id)
+      _ -> nil
+    end
+  end
+  def get_user(_), do: nil
 
   @doc """
   Gets a user by email.

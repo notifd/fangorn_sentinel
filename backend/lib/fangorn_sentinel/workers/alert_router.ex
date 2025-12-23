@@ -26,13 +26,34 @@ defmodule FangornSentinel.Workers.AlertRouter do
     * `{:error, :alert_not_found}` - Alert doesn't exist
   """
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"alert_id" => alert_id, "on_call_user_id" => on_call_user_id}}) do
+  def perform(%Oban.Job{args: %{"alert_id" => alert_id, "on_call_user_id" => on_call_user_id}})
+      when is_integer(alert_id) and alert_id > 0 and is_integer(on_call_user_id) and on_call_user_id > 0 do
     case Alerts.get_alert(alert_id) do
       {:ok, alert} ->
         route_alert(alert, on_call_user_id)
 
       {:error, :not_found} ->
         {:error, :alert_not_found}
+    end
+  end
+
+  # Handle missing or invalid args gracefully
+  def perform(%Oban.Job{args: args}) do
+    cond do
+      not Map.has_key?(args, "alert_id") ->
+        {:error, :missing_alert_id}
+
+      not Map.has_key?(args, "on_call_user_id") ->
+        {:error, :missing_on_call_user_id}
+
+      not is_integer(args["alert_id"]) or args["alert_id"] <= 0 ->
+        {:error, :invalid_alert_id}
+
+      not is_integer(args["on_call_user_id"]) or args["on_call_user_id"] <= 0 ->
+        {:error, :invalid_on_call_user_id}
+
+      true ->
+        {:error, :invalid_args}
     end
   end
 
@@ -78,8 +99,24 @@ defmodule FangornSentinel.Workers.AlertRouter do
         FangornSentinel.Workers.Notifier.enqueue_for_alert(updated_alert.id, on_call_user_id)
         :ok
 
-      {:error, _changeset} ->
-        {:error, :assignment_failed}
+      {:error, changeset} ->
+        # Handle FK constraint violations
+        if has_constraint_error?(changeset, :assigned_to_id) do
+          {:error, :user_not_found}
+        else
+          {:error, :assignment_failed}
+        end
     end
+  rescue
+    # Catch constraint exceptions that bubble up
+    Ecto.ConstraintError ->
+      {:error, :user_not_found}
+  end
+
+  defp has_constraint_error?(changeset, field) do
+    Enum.any?(changeset.errors, fn
+      {^field, {_msg, opts}} -> Keyword.get(opts, :constraint) != nil
+      _ -> false
+    end)
   end
 end

@@ -86,6 +86,7 @@ defmodule FangornSentinel.MixProject do
       # Push Notifications
       {:pigeon, "~> 2.0"},
       {:kadabra, "~> 0.6.0"},
+      {:goth, "~> 1.4"},
 
       # Testing
       {:mox, "~> 1.0", only: :test},

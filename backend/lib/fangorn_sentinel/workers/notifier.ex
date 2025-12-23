@@ -32,12 +32,33 @@ defmodule FangornSentinel.Workers.Notifier do
     * `{:error, :user_not_found}` - User doesn't exist
   """
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"alert_id" => alert_id, "user_id" => user_id}}) do
+  def perform(%Oban.Job{args: %{"alert_id" => alert_id, "user_id" => user_id}})
+      when is_integer(alert_id) and alert_id > 0 and is_integer(user_id) and user_id > 0 do
     with {:ok, alert} <- get_alert(alert_id),
          {:ok, user} <- get_user(user_id),
          devices <- get_enabled_devices(user_id) do
       send_notifications(alert, user, devices)
       :ok
+    end
+  end
+
+  # Handle missing or invalid args gracefully
+  def perform(%Oban.Job{args: args}) do
+    cond do
+      not Map.has_key?(args, "alert_id") ->
+        {:error, :missing_alert_id}
+
+      not Map.has_key?(args, "user_id") ->
+        {:error, :missing_user_id}
+
+      not is_integer(args["alert_id"]) or args["alert_id"] <= 0 ->
+        {:error, :invalid_alert_id}
+
+      not is_integer(args["user_id"]) or args["user_id"] <= 0 ->
+        {:error, :invalid_user_id}
+
+      true ->
+        {:error, :invalid_args}
     end
   end
 

@@ -67,6 +67,8 @@ defmodule FangornSentinel.Alerts.Alert do
       :assigned_to_id
     ])
     |> validate_required([:title, :severity, :source, :fired_at])
+    |> validate_length(:title, min: 1, max: 1000)
+    |> validate_length(:message, max: 10_000)
     |> validate_inclusion(:severity, @valid_severities)
     |> validate_inclusion(:status, @valid_statuses)
     |> put_defaults()

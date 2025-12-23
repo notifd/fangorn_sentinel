@@ -24,10 +24,21 @@ defmodule FangornSentinelWeb.Router do
     plug FangornSentinelWeb.Context
   end
 
+  # Dashboard routes (LiveView with dashboard layout)
   scope "/", FangornSentinelWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :dashboard,
+      layout: {FangornSentinelWeb.Layouts, :dashboard} do
+      live "/", DashboardLive.Index, :index
+      live "/alerts", AlertsLive.Index, :index
+      live "/alerts/:id", AlertsLive.Show, :show
+      live "/schedules", SchedulesLive.Index, :index
+      live "/escalations", EscalationsLive.Index, :index
+      live "/teams", TeamsLive.Index, :index
+      live "/integrations", IntegrationsLive.Index, :index
+      live "/settings", SettingsLive.Index, :index
+    end
   end
 
   # GraphQL API (for mobile apps)

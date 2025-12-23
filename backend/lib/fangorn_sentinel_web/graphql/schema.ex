@@ -5,6 +5,7 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
   import_types FangornSentinelWeb.GraphQL.Types.Alert
   import_types FangornSentinelWeb.GraphQL.Types.User
   import_types FangornSentinelWeb.GraphQL.Types.Schedule
+  import_types FangornSentinelWeb.GraphQL.Types.Escalation
 
   alias FangornSentinelWeb.GraphQL.Resolvers
 
@@ -58,6 +59,17 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
     field :my_devices, list_of(:device) do
       resolve &Resolvers.Device.list_devices/3
     end
+
+    @desc "List escalation policies"
+    field :escalation_policies, list_of(:escalation_policy) do
+      resolve &Resolvers.Escalation.list_policies/3
+    end
+
+    @desc "Get escalation policy by ID"
+    field :escalation_policy, :escalation_policy do
+      arg :id, non_null(:id)
+      resolve &Resolvers.Escalation.get_policy/3
+    end
   end
 
   mutation do
@@ -99,6 +111,36 @@ defmodule FangornSentinelWeb.GraphQL.Schema do
       arg :resolution_note, :string
 
       resolve &Resolvers.Alert.resolve/3
+    end
+
+    @desc "Create escalation policy"
+    field :create_escalation_policy, :escalation_policy do
+      arg :input, non_null(:escalation_policy_input)
+
+      resolve &Resolvers.Escalation.create_policy/3
+    end
+
+    @desc "Update escalation policy"
+    field :update_escalation_policy, :escalation_policy do
+      arg :id, non_null(:id)
+      arg :input, non_null(:escalation_policy_input)
+
+      resolve &Resolvers.Escalation.update_policy/3
+    end
+
+    @desc "Delete escalation policy"
+    field :delete_escalation_policy, :boolean do
+      arg :id, non_null(:id)
+
+      resolve &Resolvers.Escalation.delete_policy/3
+    end
+
+    @desc "Add step to escalation policy"
+    field :add_escalation_step, :escalation_step do
+      arg :policy_id, non_null(:id)
+      arg :input, non_null(:escalation_step_input)
+
+      resolve &Resolvers.Escalation.add_step/3
     end
   end
 

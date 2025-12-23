@@ -14,6 +14,11 @@ defmodule FangornSentinelWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :api_auth do
+    plug :accepts, ["json"]
+    plug FangornSentinelWeb.Plugs.ApiAuth
+  end
+
   pipeline :graphql do
     plug :accepts, ["json"]
     plug FangornSentinelWeb.Context
@@ -39,16 +44,30 @@ defmodule FangornSentinelWeb.Router do
     end
   end
 
-  # REST API routes
+  # REST API routes - Public (webhooks, alert creation)
   scope "/api/v1", FangornSentinelWeb.API.V1 do
     pipe_through :api
 
-    # Webhook endpoints
+    # Webhook endpoints (no auth required)
     post "/webhooks/grafana", WebhookController, :grafana
+
+    # Alert creation (can use API key for programmatic access)
+    post "/alerts", AlertController, :create
+  end
+
+  # REST API routes - Authenticated
+  scope "/api/v1", FangornSentinelWeb.API.V1 do
+    pipe_through :api_auth
 
     # Device registration (for mobile apps)
     post "/devices/register", DeviceController, :register
     delete "/devices/unregister", DeviceController, :unregister
+
+    # Alert management (authenticated)
+    get "/alerts", AlertController, :index
+    get "/alerts/:id", AlertController, :show
+    post "/alerts/:id/acknowledge", AlertController, :acknowledge
+    post "/alerts/:id/resolve", AlertController, :resolve
 
     # Schedule management
     resources "/schedules", ScheduleController, except: [:new, :edit] do
